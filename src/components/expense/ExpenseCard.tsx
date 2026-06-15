@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Expense, Participant } from '@/types';
-import { colors, radius, spacing, fontSize } from '@/theme';
+import { Palette, radius, spacing, fontSize } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 import { formatDate } from '@/utils/dates';
 import { formatMoney } from '@/utils/expenses';
 import { expenseCategoryMeta } from './expenseMeta';
@@ -16,6 +18,9 @@ interface Props {
 }
 
 export function ExpenseCard({ expense, participantsById, baseCurrency, eventName, onPress }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const t = useT();
   const meta = expenseCategoryMeta[expense.category];
   const payer = participantsById[expense.paidBy]?.displayName ?? '?';
   const splitCount = expense.splitBetween.length;
@@ -35,7 +40,7 @@ export function ExpenseCard({ expense, participantsById, baseCurrency, eventName
         </View>
         <View style={styles.row}>
           <Text style={styles.meta} numberOfLines={1}>
-            {payer} a payé · {splitCount} pers.
+            {t('expense.paidBySplit', { payer, count: splitCount })}
           </Text>
           <Text style={styles.date}>{formatDate(expense.date, 'd MMM')}</Text>
         </View>
@@ -55,7 +60,7 @@ export function ExpenseCard({ expense, participantsById, baseCurrency, eventName
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',

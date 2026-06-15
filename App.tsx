@@ -1,21 +1,47 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme, Theme } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
+import { I18nProvider } from '@/i18n/I18nContext';
 import { RootNavigator } from '@/navigation/RootNavigator';
+
+function ThemedApp() {
+  const { scheme, colors } = useTheme();
+  const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
+  const navTheme: Theme = {
+    ...base,
+    colors: {
+      ...base.colors,
+      background: colors.background,
+      card: colors.surface,
+      text: colors.text,
+      border: colors.border,
+      primary: colors.primary,
+    },
+  };
+
+  return (
+    <NavigationContainer theme={navTheme}>
+      <RootNavigator />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+    </NavigationContainer>
+  );
+}
 
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AuthProvider>
-          <NavigationContainer>
-            <RootNavigator />
-            <StatusBar style="auto" />
-          </NavigationContainer>
-        </AuthProvider>
+        <ThemeProvider>
+          <I18nProvider>
+            <AuthProvider>
+              <ThemedApp />
+            </AuthProvider>
+          </I18nProvider>
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

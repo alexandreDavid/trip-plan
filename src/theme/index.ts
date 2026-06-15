@@ -1,12 +1,9 @@
-export const colors = {
+// Couleurs d'accent : identiques en clair et sombre (vives, lisibles sur les deux).
+// Seuls les neutres (fond, surface, texte, bordure) changent selon le thème.
+export const accent = {
   primary: '#2563EB',
   primaryDark: '#1D4ED8',
   secondary: '#64748B',
-  background: '#F8FAFC',
-  surface: '#FFFFFF',
-  text: '#0F172A',
-  textMuted: '#64748B',
-  border: '#E2E8F0',
   danger: '#DC2626',
   success: '#16A34A',
   warning: '#F59E0B',
@@ -17,6 +14,27 @@ export const colors = {
   activity: '#F59E0B',
   restaurant: '#DC2626',
 };
+
+export const lightColors = {
+  ...accent,
+  background: '#F8FAFC',
+  surface: '#FFFFFF',
+  text: '#0F172A',
+  textMuted: '#64748B',
+  border: '#E2E8F0',
+};
+
+export const darkColors = {
+  ...accent,
+  primary: '#3B82F6',
+  background: '#0B1120',
+  surface: '#1E293B',
+  text: '#F1F5F9',
+  textMuted: '#94A3B8',
+  border: '#334155',
+};
+
+export type Palette = typeof lightColors;
 
 export const spacing = {
   xs: 4,

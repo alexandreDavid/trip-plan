@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, fontSize } from '@/theme';
+import { radius, spacing, fontSize, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -12,6 +13,8 @@ export interface TripAction {
 }
 
 export function TripActionBar({ actions }: { actions: TripAction[] }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.bar}>
       {actions.map((a) => (
@@ -28,7 +31,7 @@ export function TripActionBar({ actions }: { actions: TripAction[] }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   bar: {
     flexDirection: 'row',
     marginHorizontal: spacing.md,

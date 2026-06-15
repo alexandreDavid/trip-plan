@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -6,28 +6,33 @@ import { AuthStackParamList } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { colors, spacing, fontSize } from '@/theme';
+import { spacing, fontSize, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 import { validateEmail } from '@/utils/validation';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export function LoginScreen({ navigation }: Props) {
   const { signIn, loading } = useAuth();
+  const { colors } = useTheme();
+  const t = useT();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const handleSubmit = async () => {
     const errs: { email?: string; password?: string } = {};
-    if (!validateEmail(email)) errs.email = 'Email invalide';
-    if (password.length < 6) errs.password = 'Au moins 6 caracteres';
+    if (!validateEmail(email)) errs.email = t('auth.invalidEmail');
+    if (password.length < 6) errs.password = t('auth.passwordMin');
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
     try {
       await signIn(email.trim(), password);
     } catch (err) {
-      Alert.alert('Erreur de connexion', (err as Error).message);
+      Alert.alert(t('auth.signInError'), (err as Error).message);
     }
   };
 
@@ -39,10 +44,10 @@ export function LoginScreen({ navigation }: Props) {
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Trip Plan</Text>
-          <Text style={styles.subtitle}>Connexion</Text>
+          <Text style={styles.subtitle}>{t('auth.signIn')}</Text>
 
           <Input
-            label="Email"
+            label={t('auth.email')}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -50,17 +55,17 @@ export function LoginScreen({ navigation }: Props) {
             error={errors.email}
           />
           <Input
-            label="Mot de passe"
+            label={t('auth.password')}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
             error={errors.password}
           />
-          <Button title="Se connecter" onPress={handleSubmit} loading={loading} />
+          <Button title={t('auth.signInAction')} onPress={handleSubmit} loading={loading} />
 
           <Pressable onPress={() => navigation.navigate('Register')} style={styles.link}>
             <Text style={styles.linkText}>
-              Pas de compte ? <Text style={styles.linkBold}>S'inscrire</Text>
+              {t('auth.noAccount')} <Text style={styles.linkBold}>{t('auth.signUpAction')}</Text>
             </Text>
           </Pressable>
         </ScrollView>
@@ -69,7 +74,7 @@ export function LoginScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { padding: spacing.lg, flexGrow: 1, justifyContent: 'center' },
   title: { fontSize: fontSize.xxl, fontWeight: '800', color: colors.primary, textAlign: 'center' },

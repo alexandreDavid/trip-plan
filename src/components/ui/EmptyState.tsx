@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fontSize, spacing } from '@/theme';
+import { fontSize, spacing, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from './Button';
 
 interface Props {
@@ -13,6 +14,8 @@ interface Props {
 }
 
 export function EmptyState({ icon = 'airplane-outline', title, subtitle, actionLabel, onAction }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.container}>
       <Ionicons name={icon} size={64} color={colors.textMuted} />
@@ -25,24 +28,25 @@ export function EmptyState({ icon = 'airplane-outline', title, subtitle, actionL
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.xl,
-  },
-  title: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.text,
-    marginTop: spacing.md,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: fontSize.sm,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-    textAlign: 'center',
-  },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.xl,
+    },
+    title: {
+      fontSize: fontSize.lg,
+      fontWeight: '600',
+      color: colors.text,
+      marginTop: spacing.md,
+      textAlign: 'center',
+    },
+    subtitle: {
+      fontSize: fontSize.sm,
+      color: colors.textMuted,
+      marginTop: spacing.xs,
+      textAlign: 'center',
+    },
+  });

@@ -1,0 +1,41 @@
+// Rempli lors de la conversion des écrans d'authentification.
+const auth = {
+  fr: {
+    'auth.signIn': 'Connexion',
+    'auth.signInAction': 'Se connecter',
+    'auth.signUpAction': "S'inscrire",
+    'auth.email': 'Email',
+    'auth.password': 'Mot de passe',
+    'auth.confirmPassword': 'Confirmer le mot de passe',
+    'auth.name': 'Nom',
+    'auth.createAccount': 'Creer un compte',
+    'auth.noAccount': 'Pas de compte ?',
+    'auth.haveAccount': 'Deja un compte ?',
+    'auth.invalidEmail': 'Email invalide',
+    'auth.passwordMin': 'Au moins 6 caracteres',
+    'auth.nameRequired': 'Le nom est requis',
+    'auth.passwordsMismatch': 'Les mots de passe ne correspondent pas',
+    'auth.signInError': 'Erreur de connexion',
+    'auth.signUpError': "Erreur d'inscription",
+  } as Record<string, string>,
+  en: {
+    'auth.signIn': 'Sign in',
+    'auth.signInAction': 'Sign in',
+    'auth.signUpAction': 'Sign up',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.confirmPassword': 'Confirm password',
+    'auth.name': 'Name',
+    'auth.createAccount': 'Create an account',
+    'auth.noAccount': 'No account?',
+    'auth.haveAccount': 'Already have an account?',
+    'auth.invalidEmail': 'Invalid email',
+    'auth.passwordMin': 'At least 6 characters',
+    'auth.nameRequired': 'Name is required',
+    'auth.passwordsMismatch': 'Passwords do not match',
+    'auth.signInError': 'Sign-in error',
+    'auth.signUpError': 'Sign-up error',
+  } as Record<string, string>,
+};
+
+export default auth;

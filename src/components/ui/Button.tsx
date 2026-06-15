@@ -7,7 +7,8 @@ import {
   ViewStyle,
   StyleProp,
 } from 'react-native';
-import { colors, radius, spacing, fontSize } from '@/theme';
+import { radius, spacing, fontSize } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
@@ -21,14 +22,27 @@ interface Props {
 }
 
 export function Button({ title, onPress, variant = 'primary', loading, disabled, style }: Props) {
+  const { colors } = useTheme();
   const isDisabled = disabled || loading;
+
+  const backgroundColor: string =
+    variant === 'primary'
+      ? colors.primary
+      : variant === 'secondary'
+        ? colors.border
+        : variant === 'danger'
+          ? colors.danger
+          : 'transparent';
+  const textColor =
+    variant === 'secondary' ? colors.text : variant === 'ghost' ? colors.primary : '#fff';
+
   return (
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.base,
-        variantStyles[variant],
+        { backgroundColor },
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressed,
         style,
@@ -37,7 +51,7 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled,
       {loading ? (
         <ActivityIndicator color={variant === 'ghost' ? colors.primary : '#fff'} />
       ) : (
-        <Text style={[styles.text, textVariantStyles[variant]]}>{title}</Text>
+        <Text style={[styles.text, { color: textColor }]}>{title}</Text>
       )}
     </Pressable>
   );
@@ -56,17 +70,3 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
   text: { fontSize: fontSize.md, fontWeight: '600' },
 });
-
-const variantStyles: Record<Variant, ViewStyle> = {
-  primary: { backgroundColor: colors.primary },
-  secondary: { backgroundColor: colors.border },
-  danger: { backgroundColor: colors.danger },
-  ghost: { backgroundColor: 'transparent' },
-};
-
-const textVariantStyles: Record<Variant, { color: string }> = {
-  primary: { color: '#fff' },
-  secondary: { color: colors.text },
-  danger: { color: '#fff' },
-  ghost: { color: colors.primary },
-};

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,7 +10,9 @@ import { useMyTrips } from '@/hooks/useTrips';
 import { TripCard } from '@/components/trip/TripCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { colors, spacing, radius } from '@/theme';
+import { spacing, radius, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'MyTrips'>,
@@ -18,6 +20,9 @@ type Props = CompositeScreenProps<
 >;
 
 export function MyTripsScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const t = useT();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { trips, loading } = useMyTrips();
 
   if (loading) return <LoadingScreen />;
@@ -27,9 +32,9 @@ export function MyTripsScreen({ navigation }: Props) {
       {trips.length === 0 ? (
         <EmptyState
           icon="airplane-outline"
-          title="Aucun voyage"
-          subtitle="Commencez par creer votre premier voyage"
-          actionLabel="Creer un voyage"
+          title={t('home.empty.title')}
+          subtitle={t('home.empty.subtitle')}
+          actionLabel={t('home.empty.action')}
           onAction={() => navigation.navigate('AddEditTrip', {})}
         />
       ) : (
@@ -55,7 +60,7 @@ export function MyTripsScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   list: { padding: spacing.md },
   fab: {

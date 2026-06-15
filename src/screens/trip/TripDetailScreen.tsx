@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -15,7 +15,9 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { deleteEvent } from '@/services/eventService';
 import { deleteTrip } from '@/services/tripService';
-import { colors, spacing, radius, fontSize } from '@/theme';
+import { spacing, radius, fontSize, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 import { formatDateRange } from '@/utils/dates';
 import { eventMeta } from '@/components/event/eventMeta';
 
@@ -29,6 +31,9 @@ const EVENT_TYPES: EventType[] = [
 ];
 
 export function TripDetailScreen({ route, navigation }: Props) {
+  const { colors } = useTheme();
+  const t = useT();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { tripId } = route.params;
   const { trip, days, loading, isOwner, canEdit } = useTrip(tripId);
   const [selectedDayId, setSelectedDayId] = useState<string | undefined>();
@@ -44,7 +49,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: trip?.name ?? 'Voyage',
+      title: trip?.name ?? t('nav.trip'),
       headerRight: () =>
         isOwner ? (
           <View style={styles.headerActions}>
@@ -64,13 +69,13 @@ export function TripDetailScreen({ route, navigation }: Props) {
           </View>
         ) : null,
     });
-  }, [navigation, trip, isOwner, tripId]);
+  }, [navigation, trip, isOwner, tripId, t, colors, styles]);
 
   const handleDelete = () => {
-    Alert.alert('Supprimer le voyage ?', 'Cette action est irreversible.', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('trip.deleteTripTitle'), t('trip.deleteTripMsg'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Supprimer',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: async () => {
           await deleteTrip(tripId);
@@ -82,10 +87,10 @@ export function TripDetailScreen({ route, navigation }: Props) {
 
   const handleDeleteEvent = (eventId: string) => {
     if (!selectedDayId) return;
-    Alert.alert('Supprimer cet evenement ?', '', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('trip.deleteEventTitle'), '', [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Supprimer',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: () => deleteEvent(tripId, selectedDayId, eventId),
       },
@@ -109,10 +114,10 @@ export function TripDetailScreen({ route, navigation }: Props) {
           </View>
           <TripActionBar
             actions={[
-              { icon: 'time-outline', label: 'Timeline', onPress: () => navigation.navigate('Timeline', { tripId }) },
-              { icon: 'wallet-outline', label: 'Dépenses', onPress: () => navigation.navigate('Expenses', { tripId }) },
-              { icon: 'notifications-outline', label: 'Rappels', onPress: () => navigation.navigate('Reminders', { tripId }) },
-              { icon: 'map-outline', label: 'Carte', onPress: () => navigation.navigate('Map', { tripId }) },
+              { icon: 'time-outline', label: t('trip.actions.timeline'), onPress: () => navigation.navigate('Timeline', { tripId }) },
+              { icon: 'wallet-outline', label: t('trip.actions.expenses'), onPress: () => navigation.navigate('Expenses', { tripId }) },
+              { icon: 'notifications-outline', label: t('trip.actions.reminders'), onPress: () => navigation.navigate('Reminders', { tripId }) },
+              { icon: 'map-outline', label: t('trip.actions.map'), onPress: () => navigation.navigate('Map', { tripId }) },
             ]}
           />
           <BudgetSummary total={budget.total} byType={budget.byType} />
@@ -127,8 +132,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
             <View style={{ paddingVertical: spacing.xl }}>
               <EmptyState
                 icon="calendar-outline"
-                title="Aucun evenement"
-                subtitle={canEdit ? 'Ajoutez votre premier evenement' : undefined}
+                title={t('trip.empty.title')}
+                subtitle={canEdit ? t('trip.empty.subtitle') : undefined}
               />
             </View>
           ) : (
@@ -165,26 +170,26 @@ export function TripDetailScreen({ route, navigation }: Props) {
             <View style={styles.pickerBackdrop}>
               <Pressable style={styles.backdropPress} onPress={() => setPickerOpen(false)} />
               <View style={styles.pickerCard}>
-                <Text style={styles.pickerTitle}>Type d'evenement</Text>
-                {EVENT_TYPES.map((t) => {
-                  const meta = eventMeta[t];
+                <Text style={styles.pickerTitle}>{t('trip.eventTypeTitle')}</Text>
+                {EVENT_TYPES.map((type) => {
+                  const meta = eventMeta[type];
                   return (
                     <Pressable
-                      key={t}
+                      key={type}
                       style={styles.pickerItem}
                       onPress={() => {
                         setPickerOpen(false);
                         navigation.navigate('AddEditEvent', {
                           tripId,
                           dayId: selectedDayId,
-                          eventType: t,
+                          eventType: type,
                         });
                       }}
                     >
                       <View style={[styles.pickerIcon, { backgroundColor: meta.color + '22' }]}>
                         <Ionicons name={meta.icon} size={20} color={meta.color} />
                       </View>
-                      <Text style={styles.pickerLabel}>{meta.label}</Text>
+                      <Text style={styles.pickerLabel}>{t(meta.labelKey)}</Text>
                     </Pressable>
                   );
                 })}
@@ -200,7 +205,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   cover: { width: '100%', height: 180 },
   info: { padding: spacing.md },

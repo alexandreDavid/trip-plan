@@ -5,16 +5,20 @@ import { MainTabParamList } from '@/types';
 import { MyTripsScreen } from '@/screens/home/MyTripsScreen';
 import { SharedTripsScreen } from '@/screens/home/SharedTripsScreen';
 import { ProfileScreen } from '@/screens/profile/ProfileScreen';
-import { colors } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export function MainTabs() {
+  const { colors } = useTheme();
+  const t = useT();
   return (
     <Tab.Navigator
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
         headerStyle: { backgroundColor: colors.surface },
         headerTitleStyle: { color: colors.text },
       }}
@@ -23,7 +27,7 @@ export function MainTabs() {
         name="MyTrips"
         component={MyTripsScreen}
         options={{
-          title: 'Mes voyages',
+          title: t('nav.myTrips'),
           tabBarIcon: ({ color, size }) => <Ionicons name="airplane" size={size} color={color} />,
         }}
       />
@@ -31,7 +35,7 @@ export function MainTabs() {
         name="SharedTrips"
         component={SharedTripsScreen}
         options={{
-          title: 'Partages',
+          title: t('nav.sharedTrips'),
           tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />,
         }}
       />
@@ -39,7 +43,7 @@ export function MainTabs() {
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: 'Profil',
+          title: t('nav.profile'),
           tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
         }}
       />

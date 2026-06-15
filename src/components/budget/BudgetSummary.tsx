@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { EventType } from '@/types';
-import { colors, spacing, radius, fontSize } from '@/theme';
+import { spacing, radius, fontSize, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 import { formatBudget } from '@/utils/budget';
 import { eventMeta } from '@/components/event/eventMeta';
 
@@ -11,10 +13,13 @@ interface Props {
 }
 
 export function BudgetSummary({ total, byType }: Props) {
+  const { colors } = useTheme();
+  const t = useT();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.container}>
       <View style={styles.totalRow}>
-        <Text style={styles.totalLabel}>Budget total</Text>
+        <Text style={styles.totalLabel}>{t('trip.budgetTotal')}</Text>
         <Text style={styles.totalValue}>{formatBudget(total)}</Text>
       </View>
       <View style={styles.breakdown}>
@@ -23,7 +28,7 @@ export function BudgetSummary({ total, byType }: Props) {
           return (
             <View key={type} style={styles.item}>
               <View style={[styles.dot, { backgroundColor: meta.color }]} />
-              <Text style={styles.itemLabel}>{meta.label}</Text>
+              <Text style={styles.itemLabel}>{t(meta.labelKey)}</Text>
               <Text style={styles.itemValue}>{formatBudget(byType[type])}</Text>
             </View>
           );
@@ -33,7 +38,7 @@ export function BudgetSummary({ total, byType }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   container: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,

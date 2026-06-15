@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -11,12 +11,17 @@ import {
   updateEvent,
 } from '@/services/eventService';
 import { getDaysOnce } from '@/services/tripService';
-import { colors, spacing } from '@/theme';
+import { spacing, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddEditEvent'>;
 
 export function AddEditEventScreen({ route, navigation }: Props) {
   const { tripId, dayId, eventId, eventType } = route.params;
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const t = useT();
   const [initialEvent, setInitialEvent] = useState<TripEvent | undefined>();
   const [dayDate, setDayDate] = useState<Date | undefined>();
   const [existingCount, setExistingCount] = useState(0);
@@ -57,7 +62,7 @@ export function AddEditEventScreen({ route, navigation }: Props) {
       }
       navigation.goBack();
     } catch (err) {
-      Alert.alert('Erreur', (err as Error).message);
+      Alert.alert(t('common.error'), (err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -78,7 +83,7 @@ export function AddEditEventScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { padding: spacing.md },
 });

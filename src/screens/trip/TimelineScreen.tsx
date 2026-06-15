@@ -10,7 +10,9 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { getDayLabel } from '@/utils/dates';
 import { sortEventsChronologically } from '@/utils/events';
-import { colors, spacing, fontSize } from '@/theme';
+import { spacing, fontSize, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Timeline'>;
 
@@ -18,10 +20,13 @@ export function TimelineScreen({ route, navigation }: Props) {
   const { tripId } = route.params;
   const { trip, days, loading: tripLoading, canEdit } = useTrip(tripId);
   const { events, loading: eventsLoading } = useAllEvents(tripId);
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const t = useT();
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: 'Timeline' });
-  }, [navigation]);
+    navigation.setOptions({ title: t('nav.timeline') });
+  }, [navigation, t]);
 
   // Regroupe les événements par jour, triés chronologiquement.
   const eventsByDay = useMemo(() => {
@@ -43,8 +48,8 @@ export function TimelineScreen({ route, navigation }: Props) {
         <View style={styles.emptyWrap}>
           <EmptyState
             icon="time-outline"
-            title="Itinéraire vide"
-            subtitle="Ajoutez des événements pour voir la timeline du voyage."
+            title={t('tripx.emptyItineraryTitle')}
+            subtitle={t('tripx.emptyItinerarySubtitle')}
           />
         </View>
       </SafeAreaView>
@@ -63,7 +68,7 @@ export function TimelineScreen({ route, navigation }: Props) {
                 <Text style={styles.dayLabel}>{getDayLabel(index, day.date)}</Text>
               </View>
               {dayEvents.length === 0 ? (
-                <Text style={styles.emptyDay}>Rien de prévu</Text>
+                <Text style={styles.emptyDay}>{t('tripx.nothingPlanned')}</Text>
               ) : (
                 dayEvents.map((event) => (
                   <EventCard
@@ -91,7 +96,7 @@ export function TimelineScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { padding: spacing.md },
   emptyWrap: { flex: 1, padding: spacing.md },

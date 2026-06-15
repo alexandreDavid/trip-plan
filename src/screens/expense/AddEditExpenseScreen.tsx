@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -13,11 +13,16 @@ import { ExpenseForm } from '@/components/expense/ExpenseForm';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { createExpense, updateExpense, deleteExpense } from '@/services/expenseService';
-import { colors, spacing } from '@/theme';
+import { Palette, spacing } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddEditExpense'>;
 
 export function AddEditExpenseScreen({ route, navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const t = useT();
   const { tripId, expenseId } = route.params;
   const { user } = useAuth();
   const { trip } = useTrip(tripId);
@@ -30,10 +35,10 @@ export function AddEditExpenseScreen({ route, navigation }: Props) {
 
   const handleDelete = () => {
     if (!expenseId) return;
-    Alert.alert('Supprimer cette dépense ?', '', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('expense.deleteConfirmTitle'), '', [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Supprimer',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: async () => {
           await deleteExpense(tripId, expenseId);
@@ -52,7 +57,7 @@ export function AddEditExpenseScreen({ route, navigation }: Props) {
           </Pressable>
         ) : null,
     });
-  }, [navigation, expenseId]);
+  }, [navigation, expenseId, colors]);
 
   if (loading || (expenseId && !initialExpense)) return <LoadingScreen />;
 
@@ -62,9 +67,9 @@ export function AddEditExpenseScreen({ route, navigation }: Props) {
         <View style={styles.empty}>
           <EmptyState
             icon="people-outline"
-            title="Aucun participant"
-            subtitle="Ajoutez d'abord des participants au voyage pour répartir les dépenses."
-            actionLabel="Gérer les participants"
+            title={t('expense.noParticipants')}
+            subtitle={t('expense.noParticipantsSubtitle')}
+            actionLabel={t('expense.manageParticipants')}
             onAction={() => navigation.replace('Participants', { tripId })}
           />
         </View>
@@ -83,7 +88,7 @@ export function AddEditExpenseScreen({ route, navigation }: Props) {
       }
       navigation.goBack();
     } catch (err) {
-      Alert.alert('Erreur', (err as Error).message);
+      Alert.alert(t('common.error'), (err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -104,7 +109,7 @@ export function AddEditExpenseScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   empty: { flex: 1, padding: spacing.md },
 });

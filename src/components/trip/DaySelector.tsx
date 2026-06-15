@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Day } from '@/types';
-import { colors, radius, spacing, fontSize } from '@/theme';
+import { radius, spacing, fontSize, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 import { formatDate } from '@/utils/dates';
 
 interface Props {
@@ -11,6 +13,9 @@ interface Props {
 }
 
 export function DaySelector({ days, selectedDayId, onSelect }: Props) {
+  const { colors } = useTheme();
+  const t = useT();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <FlatList
       data={days}
@@ -25,7 +30,9 @@ export function DaySelector({ days, selectedDayId, onSelect }: Props) {
             onPress={() => onSelect(item.id)}
             style={[styles.day, selected && styles.selected]}
           >
-            <Text style={[styles.dayNum, selected && styles.selectedText]}>Jour {index + 1}</Text>
+            <Text style={[styles.dayNum, selected && styles.selectedText]}>
+              {t('trip.day', { index: index + 1 })}
+            </Text>
             <Text style={[styles.dayDate, selected && styles.selectedText]}>
               {formatDate(item.date, 'd MMM')}
             </Text>
@@ -36,7 +43,7 @@ export function DaySelector({ days, selectedDayId, onSelect }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   content: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: spacing.sm },
   day: {
     paddingHorizontal: spacing.md,

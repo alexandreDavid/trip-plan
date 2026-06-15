@@ -15,7 +15,9 @@ import {
 } from '@/services/notificationService';
 import { Button } from '@/components/ui/Button';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { colors, radius, spacing, fontSize } from '@/theme';
+import { radius, spacing, fontSize, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Reminders'>;
 
@@ -23,6 +25,9 @@ export function RemindersScreen({ route }: Props) {
   const { tripId } = route.params;
   const { trip, loading } = useTrip(tripId);
   const { events } = useAllEvents(tripId);
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const t = useT();
   const [scheduledCount, setScheduledCount] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -54,18 +59,18 @@ export function RemindersScreen({ route }: Props) {
       const granted = await requestNotificationPermission();
       if (!granted) {
         Alert.alert(
-          'Permission refusée',
-          'Autorisez les notifications dans les réglages pour recevoir les rappels.',
+          t('tripx.permissionDeniedTitle'),
+          t('tripx.permissionDeniedMessage'),
         );
         return;
       }
       const n = await scheduleTripReminders(trip, events);
       await refresh();
-      Alert.alert('Rappels programmés', `${n} rappel(s) programmé(s) pour ce voyage.`);
+      Alert.alert(t('tripx.remindersScheduledTitle'), t('tripx.remindersScheduledMessage', { count: n }));
     } catch (e) {
       Alert.alert(
-        'Indisponible',
-        `${(e as Error).message}\n\nLes notifications nécessitent un build de développement (elles ne fonctionnent pas dans Expo Go sur SDK 55).`,
+        t('tripx.unavailableTitle'),
+        t('tripx.remindersUnavailableMessage', { message: (e as Error).message }),
       );
     } finally {
       setBusy(false);
@@ -78,7 +83,7 @@ export function RemindersScreen({ route }: Props) {
       await cancelTripReminders(tripId);
       await refresh();
     } catch (e) {
-      Alert.alert('Erreur', (e as Error).message);
+      Alert.alert(t('common.error'), (e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -94,34 +99,57 @@ export function RemindersScreen({ route }: Props) {
             <Ionicons name="notifications" size={22} color={colors.primary} />
             <Text style={styles.statusText}>
               {scheduledCount == null
-                ? 'Statut des rappels indisponible'
-                : `${scheduledCount} rappel(s) programmé(s)`}
+                ? t('tripx.reminderStatusUnavailable')
+                : t('tripx.scheduledCount', { count: scheduledCount })}
             </Text>
           </View>
           <Text style={styles.hint}>
-            {upcomingCount} événement(s) à venir avec une heure pourront recevoir un rappel.
+            {t('tripx.upcomingWithTime', { count: upcomingCount })}
           </Text>
         </View>
 
-        <Text style={styles.section}>Anticipation par type</Text>
+        <Text style={styles.section}>{t('tripx.leadByType')}</Text>
         <View style={styles.card}>
-          <LeadRow icon="airplane-outline" label="Transport" value="3 h avant le départ" />
-          <LeadRow icon="bed-outline" label="Hébergement" value="2 h avant le check-in" />
-          <LeadRow icon="map-outline" label="Activité" value="1 h avant" />
-          <LeadRow icon="restaurant-outline" label="Restaurant" value="1 h avant" />
+          <LeadRow
+            icon="airplane-outline"
+            label={t('event.type.transport')}
+            value={t('tripx.leadTransport')}
+            colors={colors}
+            styles={styles}
+          />
+          <LeadRow
+            icon="bed-outline"
+            label={t('event.type.accommodation')}
+            value={t('tripx.leadAccommodation')}
+            colors={colors}
+            styles={styles}
+          />
+          <LeadRow
+            icon="map-outline"
+            label={t('event.type.activity')}
+            value={t('tripx.leadHourBefore')}
+            colors={colors}
+            styles={styles}
+          />
+          <LeadRow
+            icon="restaurant-outline"
+            label={t('event.type.restaurant')}
+            value={t('tripx.leadHourBefore')}
+            colors={colors}
+            styles={styles}
+          />
         </View>
 
         <Button
-          title="Programmer les rappels"
+          title={t('tripx.scheduleReminders')}
           onPress={handleSchedule}
           loading={busy}
           style={{ marginTop: spacing.md }}
         />
-        <Button title="Annuler les rappels" onPress={handleCancel} variant="ghost" disabled={busy} />
+        <Button title={t('tripx.cancelReminders')} onPress={handleCancel} variant="ghost" disabled={busy} />
 
         <Text style={styles.footnote}>
-          Reprogrammez après avoir modifié l'itinéraire pour garder les rappels à jour. Les rappels
-          sont locaux à cet appareil.
+          {t('tripx.remindersFootnote')}
         </Text>
       </View>
     </SafeAreaView>
@@ -132,10 +160,14 @@ function LeadRow({
   icon,
   label,
   value,
+  colors,
+  styles,
 }: {
   icon: keyof typeof import('@expo/vector-icons').Ionicons.glyphMap;
   label: string;
   value: string;
+  colors: Palette;
+  styles: ReturnType<typeof makeStyles>;
 }) {
   return (
     <View style={styles.leadRow}>
@@ -146,7 +178,7 @@ function LeadRow({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1, padding: spacing.md },
   card: {

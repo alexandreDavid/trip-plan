@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { EventType, TripEvent } from '@/types';
-import { colors, radius, spacing, fontSize } from '@/theme';
+import { radius, spacing, fontSize, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
+import type { TranslateFn } from '@/i18n/I18nContext';
 import { formatTime } from '@/utils/dates';
 import { formatBudget } from '@/utils/budget';
 import { eventMeta } from './eventMeta';
@@ -14,14 +17,17 @@ interface Props {
   editable?: boolean;
 }
 
-function getTimeLabel(event: TripEvent): string | null {
+function getTimeLabel(event: TripEvent, t: TranslateFn): string | null {
   switch (event.type) {
     case EventType.ACCOMMODATION:
-      return event.checkInTime ? `Check-in ${formatTime(event.checkInTime)}` : null;
+      return event.checkInTime
+        ? t('event.checkInAt', { time: formatTime(event.checkInTime) })
+        : null;
     case EventType.TRANSPORT:
       if (event.departureTime && event.arrivalTime)
         return `${formatTime(event.departureTime)} -> ${formatTime(event.arrivalTime)}`;
-      if (event.departureTime) return `Depart ${formatTime(event.departureTime)}`;
+      if (event.departureTime)
+        return t('event.departAt', { time: formatTime(event.departureTime) });
       return null;
     case EventType.ACTIVITY:
       if (event.startTime && event.endTime)
@@ -47,8 +53,11 @@ function getSubtitle(event: TripEvent): string | null {
 }
 
 export function EventCard({ event, onPress, onDelete, editable }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const t = useT();
   const meta = eventMeta[event.type];
-  const timeLabel = getTimeLabel(event);
+  const timeLabel = getTimeLabel(event, t);
   const subtitle = getSubtitle(event);
 
   return (
@@ -82,7 +91,7 @@ export function EventCard({ event, onPress, onDelete, editable }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',

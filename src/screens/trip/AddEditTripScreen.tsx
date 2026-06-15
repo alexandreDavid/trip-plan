@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -10,13 +10,18 @@ import { createTrip, getTrip, updateTrip } from '@/services/tripService';
 import { uploadTripCoverImage } from '@/services/storageService';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { colors, spacing, fontSize, radius } from '@/theme';
+import { spacing, fontSize, radius, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 import { validateTripForm } from '@/utils/validation';
 import { formatDate } from '@/utils/dates';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddEditTrip'>;
 
 export function AddEditTripScreen({ route, navigation }: Props) {
+  const { colors } = useTheme();
+  const t = useT();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { user } = useAuth();
   const tripId = route.params?.tripId;
   const isEditing = !!tripId;
@@ -99,7 +104,7 @@ export function AddEditTripScreen({ route, navigation }: Props) {
       }
       navigation.goBack();
     } catch (err) {
-      Alert.alert('Erreur', (err as Error).message);
+      Alert.alert(t('common.error'), (err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -116,14 +121,14 @@ export function AddEditTripScreen({ route, navigation }: Props) {
           ) : (
             <View style={[styles.cover, styles.coverPlaceholder]}>
               <Ionicons name="image-outline" size={32} color={colors.textMuted} />
-              <Text style={styles.coverLabel}>Ajouter une image</Text>
+              <Text style={styles.coverLabel}>{t('trip.coverAdd')}</Text>
             </View>
           )}
         </Pressable>
 
-        <Input label="Nom du voyage *" value={name} onChangeText={setName} error={errors.name} />
+        <Input label={t('trip.name')} value={name} onChangeText={setName} error={errors.name} />
         <Input
-          label="Destination *"
+          label={t('trip.destination')}
           value={destination}
           onChangeText={setDestination}
           error={errors.destination}
@@ -131,7 +136,7 @@ export function AddEditTripScreen({ route, navigation }: Props) {
         <View style={styles.row}>
           <View style={styles.half}>
             <Input
-              label="Debut (YYYY-MM-DD) *"
+              label={t('trip.startDate')}
               value={startDateInput}
               onChangeText={handleStartChange}
               placeholder="2026-06-01"
@@ -140,7 +145,7 @@ export function AddEditTripScreen({ route, navigation }: Props) {
           </View>
           <View style={styles.half}>
             <Input
-              label="Fin (YYYY-MM-DD) *"
+              label={t('trip.endDate')}
               value={endDateInput}
               onChangeText={handleEndChange}
               placeholder="2026-06-10"
@@ -150,7 +155,7 @@ export function AddEditTripScreen({ route, navigation }: Props) {
         </View>
 
         <Button
-          title={isEditing ? 'Enregistrer' : 'Creer le voyage'}
+          title={isEditing ? t('common.save') : t('trip.create')}
           onPress={handleSubmit}
           loading={submitting}
         />
@@ -159,7 +164,7 @@ export function AddEditTripScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { padding: spacing.md },
   coverWrap: { marginBottom: spacing.md },

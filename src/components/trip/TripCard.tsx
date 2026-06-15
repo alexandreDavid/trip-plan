@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Trip } from '@/types';
-import { colors, radius, spacing, fontSize } from '@/theme';
+import { radius, spacing, fontSize, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { formatDateRange } from '@/utils/dates';
 
 interface Props {
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export function TripCard({ trip, onPress, sharedBadge }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Pressable style={({ pressed }) => [styles.card, pressed && styles.pressed]} onPress={onPress}>
       {trip.coverImageURL ? (
@@ -41,7 +44,7 @@ export function TripCard({ trip, onPress, sharedBadge }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -8,12 +8,17 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { SharedUserItem } from '@/components/share/SharedUserItem';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { colors, spacing, fontSize } from '@/theme';
+import { spacing, fontSize, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 import { validateEmail } from '@/utils/validation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ShareTrip'>;
 
 export function ShareTripScreen({ route }: Props) {
+  const { colors } = useTheme();
+  const t = useT();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { tripId } = route.params;
   const { members, shareWithEmail, changeRole, removeShare } = useShareTrip(tripId);
   const [email, setEmail] = useState('');
@@ -22,7 +27,7 @@ export function ShareTripScreen({ route }: Props) {
 
   const handleInvite = async () => {
     if (!validateEmail(email)) {
-      setError('Email invalide');
+      setError(t('trip.invalidEmail'));
       return;
     }
     setError(null);
@@ -30,7 +35,7 @@ export function ShareTripScreen({ route }: Props) {
     const result = await shareWithEmail(email);
     setSubmitting(false);
     if (!result.ok) {
-      setError(result.error ?? 'Erreur inconnue');
+      setError(result.error ?? t('trip.unknownError'));
     } else {
       setEmail('');
     }
@@ -38,11 +43,11 @@ export function ShareTripScreen({ route }: Props) {
 
   const handleRemove = (userId: string, name: string) => {
     Alert.alert(
-      'Retirer l\'acces ?',
-      `${name} ne pourra plus consulter ce voyage.`,
+      t('trip.removeAccessTitle'),
+      t('trip.removeAccessMsg', { name }),
       [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Retirer', style: 'destructive', onPress: () => removeShare(userId) },
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common.remove'), style: 'destructive', onPress: () => removeShare(userId) },
       ],
     );
   };
@@ -50,11 +55,8 @@ export function ShareTripScreen({ route }: Props) {
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <View style={styles.container}>
-        <Text style={styles.title}>Inviter par email</Text>
-        <Text style={styles.subtitle}>
-          Les personnes invitees peuvent modifier le voyage (editeur) par defaut. Touchez le badge
-          de role pour passer un membre en lecteur.
-        </Text>
+        <Text style={styles.title}>{t('trip.inviteByEmail')}</Text>
+        <Text style={styles.subtitle}>{t('trip.shareExplanation')}</Text>
         <Input
           value={email}
           onChangeText={setEmail}
@@ -63,11 +65,11 @@ export function ShareTripScreen({ route }: Props) {
           placeholder="email@exemple.com"
           error={error ?? undefined}
         />
-        <Button title="Inviter" onPress={handleInvite} loading={submitting} />
+        <Button title={t('trip.invite')} onPress={handleInvite} loading={submitting} />
 
-        <Text style={[styles.title, { marginTop: spacing.xl }]}>Acces partages</Text>
+        <Text style={[styles.title, { marginTop: spacing.xl }]}>{t('trip.sharedAccess')}</Text>
         {members.length === 0 ? (
-          <EmptyState icon="people-outline" title="Personne" subtitle="Aucun partage pour le moment" />
+          <EmptyState icon="people-outline" title={t('trip.noOne')} subtitle={t('trip.noShare')} />
         ) : (
           <FlatList
             data={members}
@@ -89,7 +91,7 @@ export function ShareTripScreen({ route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1, padding: spacing.md },
   title: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text, marginBottom: spacing.xs },

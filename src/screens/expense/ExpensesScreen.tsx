@@ -12,11 +12,16 @@ import { ExpenseCard } from '@/components/expense/ExpenseCard';
 import { BalancePanel } from '@/components/expense/BalancePanel';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { colors, radius, spacing, fontSize } from '@/theme';
+import { Palette, radius, spacing, fontSize } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Expenses'>;
 
 export function ExpensesScreen({ route, navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const t = useT();
   const { tripId } = route.params;
   const { trip, canEdit } = useTrip(tripId);
   const { participants, expenses, balances, settlements, totalInBase, loading } =
@@ -35,14 +40,14 @@ export function ExpensesScreen({ route, navigation }: Props) {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: 'Dépenses',
+      title: t('nav.expenses'),
       headerRight: () => (
         <Pressable onPress={() => navigation.navigate('Participants', { tripId })} hitSlop={8}>
           <Ionicons name="people-outline" size={22} color={colors.primary} />
         </Pressable>
       ),
     });
-  }, [navigation, tripId]);
+  }, [navigation, tripId, t, colors]);
 
   if (loading) return <LoadingScreen />;
 
@@ -54,9 +59,9 @@ export function ExpensesScreen({ route, navigation }: Props) {
         <View style={styles.empty}>
           <EmptyState
             icon="people-outline"
-            title="Commencez par les participants"
-            subtitle="Ajoutez les personnes avec qui vous partagez les dépenses."
-            actionLabel={canEdit ? 'Gérer les participants' : undefined}
+            title={t('expense.startWithParticipants')}
+            subtitle={t('expense.startWithParticipantsSubtitle')}
+            actionLabel={canEdit ? t('expense.manageParticipants') : undefined}
             onAction={canEdit ? () => navigation.navigate('Participants', { tripId }) : undefined}
           />
         </View>
@@ -70,14 +75,14 @@ export function ExpensesScreen({ route, navigation }: Props) {
             baseCurrency={baseCurrency}
           />
 
-          <Text style={styles.sectionTitle}>Dépenses</Text>
+          <Text style={styles.sectionTitle}>{t('expense.expensesSection')}</Text>
           <View style={styles.list}>
             {expenses.length === 0 ? (
               <View style={{ paddingVertical: spacing.xl }}>
                 <EmptyState
                   icon="receipt-outline"
-                  title="Aucune dépense"
-                  subtitle={canEdit ? 'Ajoutez votre première dépense' : undefined}
+                  title={t('expense.noExpenses')}
+                  subtitle={canEdit ? t('expense.addFirstExpense') : undefined}
                 />
               </View>
             ) : (
@@ -113,7 +118,7 @@ export function ExpensesScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   empty: { flex: 1, padding: spacing.md },
   sectionTitle: {

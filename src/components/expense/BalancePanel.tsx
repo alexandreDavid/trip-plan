@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Participant } from '@/types';
-import { colors, radius, spacing, fontSize } from '@/theme';
+import { Palette, radius, spacing, fontSize } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 import { formatCents, Settlement } from '@/utils/expenses';
 
 interface Props {
@@ -20,16 +22,19 @@ export function BalancePanel({
   totalInBase,
   baseCurrency,
 }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const t = useT();
   const nameOf = (id: string) => participants.find((p) => p.id === id)?.displayName ?? '?';
 
   return (
     <View style={styles.container}>
       <View style={styles.totalRow}>
-        <Text style={styles.totalLabel}>Total dépensé</Text>
+        <Text style={styles.totalLabel}>{t('expense.totalSpent')}</Text>
         <Text style={styles.totalValue}>{formatCents(Math.round(totalInBase * 100), baseCurrency)}</Text>
       </View>
 
-      <Text style={styles.sectionTitle}>Soldes</Text>
+      <Text style={styles.sectionTitle}>{t('expense.balances')}</Text>
       {participants.map((p) => {
         const cents = balances[p.id] ?? 0;
         const positive = cents > 0;
@@ -51,19 +56,17 @@ export function BalancePanel({
         );
       })}
 
-      <Text style={styles.sectionTitle}>Remboursements suggérés</Text>
+      <Text style={styles.sectionTitle}>{t('expense.suggestedSettlements')}</Text>
       {settlements.length === 0 ? (
         <View style={styles.settledRow}>
           <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-          <Text style={styles.settledText}>Tout est équilibré</Text>
+          <Text style={styles.settledText}>{t('expense.allSettled')}</Text>
         </View>
       ) : (
         settlements.map((s, i) => (
           <View key={`${s.from}-${s.to}-${i}`} style={styles.settlementRow}>
             <Text style={styles.settlementText} numberOfLines={1}>
-              <Text style={styles.settlementName}>{nameOf(s.from)}</Text>
-              {' doit '}
-              <Text style={styles.settlementName}>{nameOf(s.to)}</Text>
+              {t('expense.owes', { from: nameOf(s.from), to: nameOf(s.to) })}
             </Text>
             <Text style={styles.settlementAmount}>{formatCents(s.amountCents, baseCurrency)}</Text>
           </View>
@@ -73,7 +76,7 @@ export function BalancePanel({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   container: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,

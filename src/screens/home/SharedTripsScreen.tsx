@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CompositeScreenProps } from '@react-navigation/native';
@@ -9,7 +9,9 @@ import { useSharedTrips } from '@/hooks/useTrips';
 import { TripCard } from '@/components/trip/TripCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { colors, spacing } from '@/theme';
+import { spacing, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'SharedTrips'>,
@@ -17,6 +19,9 @@ type Props = CompositeScreenProps<
 >;
 
 export function SharedTripsScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const t = useT();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { trips, loading } = useSharedTrips();
 
   if (loading) return <LoadingScreen />;
@@ -26,8 +31,8 @@ export function SharedTripsScreen({ navigation }: Props) {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <EmptyState
           icon="people-outline"
-          title="Aucun voyage partage"
-          subtitle="Les voyages partages avec vous apparaitront ici"
+          title={t('home.sharedEmpty.title')}
+          subtitle={t('home.sharedEmpty.subtitle')}
         />
       </SafeAreaView>
     );
@@ -51,7 +56,7 @@ export function SharedTripsScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   list: { padding: spacing.md },
 });

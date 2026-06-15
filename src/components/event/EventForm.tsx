@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { EventType, EventInput, TransportMode, TripEvent } from '@/types';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { colors, spacing, fontSize, radius } from '@/theme';
+import { spacing, fontSize, radius, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 import { toDate } from '@/utils/dates';
 import { validateEventName } from '@/utils/validation';
 
@@ -30,16 +32,19 @@ function formatTimeField(date: Date | undefined): string {
 }
 
 const TRANSPORT_MODES: TransportMode[] = ['flight', 'train', 'bus', 'car', 'ferry', 'other'];
-const TRANSPORT_LABELS: Record<TransportMode, string> = {
-  flight: 'Avion',
-  train: 'Train',
-  bus: 'Bus',
-  car: 'Voiture',
-  ferry: 'Ferry',
-  other: 'Autre',
+const TRANSPORT_LABEL_KEYS: Record<TransportMode, string> = {
+  flight: 'event.transport.flight',
+  train: 'event.transport.train',
+  bus: 'event.transport.bus',
+  car: 'event.transport.car',
+  ferry: 'event.transport.ferry',
+  other: 'event.transport.other',
 };
 
 export function EventForm({ type, initialEvent, dayDate, submitting, onSubmit }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const t = useT();
   // Champs communs
   const [name, setName] = useState(initialEvent?.name ?? '');
   const [notes, setNotes] = useState(initialEvent?.notes ?? '');
@@ -159,17 +164,17 @@ export function EventForm({ type, initialEvent, dayDate, submitting, onSubmit }:
 
   return (
     <View>
-      <Input label="Nom *" value={name} onChangeText={setName} error={nameError ?? undefined} />
+      <Input label={t('event.nameLabel')} value={name} onChangeText={setName} error={nameError ?? undefined} />
 
       {type === EventType.ACCOMMODATION && (
         <>
-          <Input label="Adresse" value={address} onChangeText={setAddress} />
+          <Input label={t('event.address')} value={address} onChangeText={setAddress} />
           <View style={styles.row}>
             <View style={styles.half}>
-              <Input label="Check-in (HH:mm)" value={checkInTime} onChangeText={setCheckInTime} placeholder="14:00" />
+              <Input label={t('event.checkInLabel')} value={checkInTime} onChangeText={setCheckInTime} placeholder="14:00" />
             </View>
             <View style={styles.half}>
-              <Input label="Check-out (HH:mm)" value={checkOutTime} onChangeText={setCheckOutTime} placeholder="11:00" />
+              <Input label={t('event.checkOutLabel')} value={checkOutTime} onChangeText={setCheckOutTime} placeholder="11:00" />
             </View>
           </View>
         </>
@@ -177,7 +182,7 @@ export function EventForm({ type, initialEvent, dayDate, submitting, onSubmit }:
 
       {type === EventType.TRANSPORT && (
         <>
-          <Text style={styles.label}>Mode</Text>
+          <Text style={styles.label}>{t('event.mode')}</Text>
           <View style={styles.chips}>
             {TRANSPORT_MODES.map((m) => (
               <View
@@ -186,19 +191,19 @@ export function EventForm({ type, initialEvent, dayDate, submitting, onSubmit }:
                 onTouchEnd={() => setTransportMode(m)}
               >
                 <Text style={[styles.chipText, transportMode === m && styles.chipTextSelected]}>
-                  {TRANSPORT_LABELS[m]}
+                  {t(TRANSPORT_LABEL_KEYS[m])}
                 </Text>
               </View>
             ))}
           </View>
-          <Input label="Depart" value={departureLocation} onChangeText={setDepartureLocation} />
-          <Input label="Arrivee" value={arrivalLocation} onChangeText={setArrivalLocation} />
+          <Input label={t('event.departure')} value={departureLocation} onChangeText={setDepartureLocation} />
+          <Input label={t('event.arrival')} value={arrivalLocation} onChangeText={setArrivalLocation} />
           <View style={styles.row}>
             <View style={styles.half}>
-              <Input label="Heure depart" value={departureTime} onChangeText={setDepartureTime} placeholder="09:00" />
+              <Input label={t('event.departureTime')} value={departureTime} onChangeText={setDepartureTime} placeholder="09:00" />
             </View>
             <View style={styles.half}>
-              <Input label="Heure arrivee" value={arrivalTime} onChangeText={setArrivalTime} placeholder="11:30" />
+              <Input label={t('event.arrivalTime')} value={arrivalTime} onChangeText={setArrivalTime} placeholder="11:30" />
             </View>
           </View>
         </>
@@ -206,13 +211,13 @@ export function EventForm({ type, initialEvent, dayDate, submitting, onSubmit }:
 
       {type === EventType.ACTIVITY && (
         <>
-          <Input label="Lieu" value={location} onChangeText={setLocation} />
+          <Input label={t('event.place')} value={location} onChangeText={setLocation} />
           <View style={styles.row}>
             <View style={styles.half}>
-              <Input label="Debut" value={startTime} onChangeText={setStartTime} placeholder="10:00" />
+              <Input label={t('event.start')} value={startTime} onChangeText={setStartTime} placeholder="10:00" />
             </View>
             <View style={styles.half}>
-              <Input label="Fin" value={endTime} onChangeText={setEndTime} placeholder="12:00" />
+              <Input label={t('event.end')} value={endTime} onChangeText={setEndTime} placeholder="12:00" />
             </View>
           </View>
         </>
@@ -220,19 +225,19 @@ export function EventForm({ type, initialEvent, dayDate, submitting, onSubmit }:
 
       {type === EventType.RESTAURANT && (
         <>
-          <Input label="Adresse" value={address} onChangeText={setAddress} />
-          <Input label="Heure" value={restaurantTime} onChangeText={setRestaurantTime} placeholder="19:30" />
+          <Input label={t('event.address')} value={address} onChangeText={setAddress} />
+          <Input label={t('event.time')} value={restaurantTime} onChangeText={setRestaurantTime} placeholder="19:30" />
         </>
       )}
 
       <Input
-        label="Budget (EUR)"
+        label={t('event.budgetLabel')}
         value={budget}
         onChangeText={setBudget}
         keyboardType="decimal-pad"
       />
       <Input
-        label="Notes"
+        label={t('event.notes')}
         value={notes}
         onChangeText={setNotes}
         multiline
@@ -240,12 +245,12 @@ export function EventForm({ type, initialEvent, dayDate, submitting, onSubmit }:
         style={{ minHeight: 80, textAlignVertical: 'top' }}
       />
 
-      <Button title="Enregistrer" onPress={handleSubmit} loading={submitting} />
+      <Button title={t('common.save')} onPress={handleSubmit} loading={submitting} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   row: { flexDirection: 'row', gap: spacing.sm },
   half: { flex: 1 },
   label: {

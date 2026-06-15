@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { UserProfile, TripRole } from '@/types';
-import { colors, spacing, radius, fontSize } from '@/theme';
-import { roleLabel } from '@/utils/permissions';
+import { spacing, radius, fontSize, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 
 interface Props {
   user: UserProfile;
@@ -13,6 +14,9 @@ interface Props {
 }
 
 export function SharedUserItem({ user, role, onToggleRole, onRemove }: Props) {
+  const { colors } = useTheme();
+  const t = useT();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.row}>
       {user.photoURL ? (
@@ -38,7 +42,7 @@ export function SharedUserItem({ user, role, onToggleRole, onRemove }: Props) {
             color={role === 'editor' ? colors.primary : colors.textMuted}
           />
           <Text style={[styles.roleText, role === 'editor' && styles.roleTextEditor]}>
-            {roleLabel(role)}
+            {role === 'editor' ? t('trip.role.editor') : t('trip.role.viewer')}
           </Text>
         </Pressable>
       )}
@@ -51,7 +55,7 @@ export function SharedUserItem({ user, role, onToggleRole, onRemove }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',

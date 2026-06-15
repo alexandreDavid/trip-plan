@@ -12,7 +12,9 @@ import { geocodeAddress, delay } from '@/utils/geocode';
 import { eventMeta } from '@/components/event/eventMeta';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { colors, radius, spacing, fontSize } from '@/theme';
+import { radius, spacing, fontSize, Palette } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Map'>;
 
@@ -31,6 +33,9 @@ export function MapScreen({ route, navigation }: Props) {
   const { tripId } = route.params;
   const { trip, loading, canEdit } = useTrip(tripId);
   const { events } = useAllEvents(tripId);
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const t = useT();
   const [geocoding, setGeocoding] = useState(false);
 
   const maps = useMemo(loadMaps, []);
@@ -85,11 +90,13 @@ export function MapScreen({ route, navigation }: Props) {
         await delay(1100); // respect de la limite de débit Nominatim
       }
       Alert.alert(
-        'Localisation terminée',
-        `${done} lieu(x) localisé(s)${failed ? `, ${failed} introuvable(s)` : ''}.`,
+        t('tripx.geocodeDoneTitle'),
+        failed
+          ? t('tripx.geocodeDoneWithFailures', { done, failed })
+          : t('tripx.geocodeDone', { done }),
       );
     } catch (err) {
-      Alert.alert('Erreur', (err as Error).message);
+      Alert.alert(t('common.error'), (err as Error).message);
     } finally {
       setGeocoding(false);
     }
@@ -104,8 +111,8 @@ export function MapScreen({ route, navigation }: Props) {
         <View style={styles.fallback}>
           <EmptyState
             icon="map-outline"
-            title="Carte indisponible ici"
-            subtitle="La carte nécessite un build de développement (react-native-maps ne fonctionne pas dans Expo Go)."
+            title={t('tripx.mapUnavailableTitle')}
+            subtitle={t('tripx.mapUnavailableSubtitle')}
           />
         </View>
       </SafeAreaView>
@@ -123,13 +130,13 @@ export function MapScreen({ route, navigation }: Props) {
         <View style={styles.fallback}>
           <EmptyState
             icon="location-outline"
-            title="Aucun lieu localisé"
+            title={t('tripx.noLocatedPlacesTitle')}
             subtitle={
               missing.length > 0
-                ? `${missing.length} lieu(x) ont une adresse. Lancez la localisation pour les placer sur la carte.`
-                : 'Ajoutez une adresse aux hébergements, activités ou restaurants.'
+                ? t('tripx.someHaveAddress', { count: missing.length })
+                : t('tripx.addAddressHint')
             }
-            actionLabel={canEdit && missing.length > 0 ? 'Localiser les lieux' : undefined}
+            actionLabel={canEdit && missing.length > 0 ? t('tripx.locatePlaces') : undefined}
             onAction={canEdit && missing.length > 0 ? handleGeocode : undefined}
           />
         </View>
@@ -147,7 +154,7 @@ export function MapScreen({ route, navigation }: Props) {
               key={event.id}
               coordinate={coords}
               title={event.name}
-              description={meta.label}
+              description={t(meta.labelKey)}
               pinColor={meta.color}
             >
               {Callout && (
@@ -166,7 +173,7 @@ export function MapScreen({ route, navigation }: Props) {
                 >
                   <View style={styles.callout}>
                     <Text style={styles.calloutTitle}>{event.name}</Text>
-                    <Text style={styles.calloutMeta}>{meta.label}</Text>
+                    <Text style={styles.calloutMeta}>{t(meta.labelKey)}</Text>
                   </View>
                 </Callout>
               )}
@@ -179,7 +186,7 @@ export function MapScreen({ route, navigation }: Props) {
         <Pressable style={styles.geocodeBtn} onPress={handleGeocode} disabled={geocoding}>
           <Ionicons name="navigate" size={18} color="#fff" />
           <Text style={styles.geocodeText}>
-            {geocoding ? 'Localisation…' : `Localiser ${missing.length} lieu(x)`}
+            {geocoding ? t('tripx.geocoding') : t('tripx.locateCount', { count: missing.length })}
           </Text>
         </Pressable>
       )}
@@ -187,7 +194,7 @@ export function MapScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   flex: { flex: 1 },
   safe: { flex: 1, backgroundColor: colors.background },
   fallback: { flex: 1, padding: spacing.md },

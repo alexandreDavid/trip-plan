@@ -12,7 +12,9 @@ import {
 import { CURRENCIES } from '@/config/constants';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { colors, radius, spacing, fontSize } from '@/theme';
+import { Palette, radius, spacing, fontSize } from '@/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 import { formatDate } from '@/utils/dates';
 import { amountsSplitDiff } from '@/utils/expenses';
 import { expenseCategoryMeta, EXPENSE_CATEGORIES } from './expenseMeta';
@@ -31,10 +33,10 @@ const parseNum = (s: string): number => parseFloat(s.replace(',', '.'));
 
 const todayKey = (): string => formatDate(new Date(), 'yyyy-MM-dd');
 
-const SPLIT_MODES: { mode: SplitMode; label: string }[] = [
-  { mode: 'equal', label: 'Égal' },
-  { mode: 'shares', label: 'Parts' },
-  { mode: 'amounts', label: 'Montants' },
+const SPLIT_MODES: { mode: SplitMode; labelKey: string }[] = [
+  { mode: 'equal', labelKey: 'expense.splitEqual' },
+  { mode: 'shares', labelKey: 'expense.splitShares' },
+  { mode: 'amounts', labelKey: 'expense.splitAmounts' },
 ];
 
 export function ExpenseForm({
@@ -46,6 +48,10 @@ export function ExpenseForm({
   submitting,
   onSubmit,
 }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const t = useT();
+
   const defaultPayer =
     initialExpense?.paidBy ??
     participants.find((p) => p.uid === currentUid)?.id ??
@@ -131,16 +137,16 @@ export function ExpenseForm({
     const date = parseDate(dateInput);
     const shares = buildShares();
 
-    if (!label.trim()) errs.label = 'Le libellé est requis';
-    if (!amountNum || amountNum <= 0) errs.amount = 'Montant invalide';
-    if (isForeign && (!rateNum || rateNum <= 0)) errs.rate = 'Taux invalide';
-    if (!paidBy) errs.paidBy = 'Choisissez qui a payé';
-    if (splitBetween.length === 0) errs.split = 'Au moins un participant';
+    if (!label.trim()) errs.label = t('expense.errLabelRequired');
+    if (!amountNum || amountNum <= 0) errs.amount = t('expense.errAmountInvalid');
+    if (isForeign && (!rateNum || rateNum <= 0)) errs.rate = t('expense.errRateInvalid');
+    if (!paidBy) errs.paidBy = t('expense.errChoosePayer');
+    if (splitBetween.length === 0) errs.split = t('expense.errAtLeastOneParticipant');
     if (splitMode === 'shares' && shares && Object.values(shares).reduce((a, b) => a + b, 0) <= 0) {
-      errs.split = 'Indiquez au moins une part';
+      errs.split = t('expense.errAtLeastOneShare');
     }
     if (splitMode === 'amounts' && amountsDiff !== 0) {
-      errs.split = 'La somme des montants doit égaler le total';
+      errs.split = t('expense.errAmountsMustEqualTotal');
     }
 
     setErrors(errs);
@@ -162,20 +168,28 @@ export function ExpenseForm({
     });
   };
 
+  const Chip = ({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) => (
+    <Pressable onPress={onPress} style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}>
+      <Text style={[styles.chipText, active && styles.chipTextActive]} numberOfLines={1}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <Input label="Libellé *" value={label} onChangeText={setLabel} error={errors.label} placeholder="Dîner, taxi, musée…" />
+      <Input label={t('expense.labelField')} value={label} onChangeText={setLabel} error={errors.label} placeholder={t('expense.labelPlaceholder')} />
 
       <Input
-        label="Montant *"
+        label={t('expense.amount')}
         value={amount}
         onChangeText={setAmount}
         keyboardType="decimal-pad"
-        placeholder="0"
+        placeholder={t('expense.amountPlaceholder')}
         error={errors.amount}
       />
 
-      <Text style={styles.fieldLabel}>Devise</Text>
+      <Text style={styles.fieldLabel}>{t('expense.currency')}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
         {CURRENCIES.map((c) => (
           <Chip key={c} label={c} active={c === currency} onPress={() => setCurrency(c)} />
@@ -184,7 +198,7 @@ export function ExpenseForm({
 
       {isForeign && (
         <Input
-          label={`Taux (1 ${currency} = ? ${baseCurrency}) *`}
+          label={t('expense.rate', { currency, base: baseCurrency })}
           value={rate}
           onChangeText={setRate}
           keyboardType="decimal-pad"
@@ -192,7 +206,7 @@ export function ExpenseForm({
         />
       )}
 
-      <Text style={styles.fieldLabel}>Catégorie</Text>
+      <Text style={styles.fieldLabel}>{t('expense.category')}</Text>
       <View style={styles.wrapRow}>
         {EXPENSE_CATEGORIES.map((cat) => {
           const meta = expenseCategoryMeta[cat];
@@ -205,14 +219,14 @@ export function ExpenseForm({
             >
               <Ionicons name={meta.icon} size={16} color={active ? meta.color : colors.textMuted} />
               <Text style={[styles.catText, active && { color: meta.color, fontWeight: '700' }]}>
-                {meta.label}
+                {t(meta.labelKey)}
               </Text>
             </Pressable>
           );
         })}
       </View>
 
-      <Text style={styles.fieldLabel}>Payé par *</Text>
+      <Text style={styles.fieldLabel}>{t('expense.paidByField')}</Text>
       {errors.paidBy && <Text style={styles.errorText}>{errors.paidBy}</Text>}
       <View style={styles.wrapRow}>
         {participants.map((p) => (
@@ -220,7 +234,7 @@ export function ExpenseForm({
         ))}
       </View>
 
-      <Text style={styles.fieldLabel}>Répartition</Text>
+      <Text style={styles.fieldLabel}>{t('expense.split')}</Text>
       <View style={styles.segment}>
         {SPLIT_MODES.map((m) => (
           <Pressable
@@ -229,7 +243,7 @@ export function ExpenseForm({
             style={[styles.segmentItem, splitMode === m.mode && styles.segmentItemActive]}
           >
             <Text style={[styles.segmentText, splitMode === m.mode && styles.segmentTextActive]}>
-              {m.label}
+              {t(m.labelKey)}
             </Text>
           </Pressable>
         ))}
@@ -268,7 +282,7 @@ export function ExpenseForm({
                     value={shareValue(p.id)}
                     onChangeText={(v) => setShare(p.id, v)}
                     keyboardType="decimal-pad"
-                    placeholder={splitMode === 'shares' ? 'parts' : baseCurrency}
+                    placeholder={splitMode === 'shares' ? t('expense.sharesPlaceholder') : baseCurrency}
                     placeholderTextColor={colors.textMuted}
                     style={styles.shareInput}
                   />
@@ -281,22 +295,22 @@ export function ExpenseForm({
 
       {equalPerPerson != null && (
         <Text style={styles.preview}>
-          Soit {equalPerPerson.toFixed(2)} {baseCurrency} par personne
+          {t('expense.perPerson', { amount: equalPerPerson.toFixed(2), currency: baseCurrency })}
         </Text>
       )}
       {splitMode === 'amounts' && amountInBase > 0 && (
         <Text style={[styles.preview, amountsDiff === 0 ? styles.previewOk : styles.previewWarn]}>
           {amountsDiff === 0
-            ? `Réparti intégralement (${amountInBase.toFixed(2)} ${baseCurrency})`
-            : `Reste à répartir : ${amountsDiff.toFixed(2)} ${baseCurrency}`}
+            ? t('expense.fullyAllocated', { amount: amountInBase.toFixed(2), currency: baseCurrency })
+            : t('expense.remainingToAllocate', { amount: amountsDiff.toFixed(2), currency: baseCurrency })}
         </Text>
       )}
 
       {events.length > 0 && (
         <>
-          <Text style={styles.fieldLabel}>Lier à un événement (optionnel)</Text>
+          <Text style={styles.fieldLabel}>{t('expense.linkEvent')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-            <Chip label="Aucun" active={!eventId} onPress={() => setEventId(undefined)} />
+            <Chip label={t('expense.none')} active={!eventId} onPress={() => setEventId(undefined)} />
             {events.map((ev) => (
               <Chip
                 key={ev.id}
@@ -310,15 +324,15 @@ export function ExpenseForm({
       )}
 
       <Input
-        label="Date *"
+        label={t('expense.dateField')}
         value={dateInput}
         onChangeText={setDateInput}
-        placeholder="2026-06-15"
+        placeholder={t('expense.datePlaceholder')}
         error={errors.date}
       />
 
       <Button
-        title={initialExpense ? 'Enregistrer' : 'Ajouter la dépense'}
+        title={initialExpense ? t('common.save') : t('expense.addExpense')}
         onPress={handleSubmit}
         loading={submitting}
         style={{ marginTop: spacing.sm }}
@@ -327,17 +341,7 @@ export function ExpenseForm({
   );
 }
 
-function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}>
-      <Text style={[styles.chipText, active && styles.chipTextActive]} numberOfLines={1}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   container: { padding: spacing.md, paddingBottom: spacing.xl },
   fieldLabel: { fontSize: fontSize.sm, fontWeight: '600', color: colors.text, marginBottom: spacing.xs },
   chipScroll: { marginBottom: spacing.md },
