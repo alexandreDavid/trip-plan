@@ -18,6 +18,7 @@ export interface Trip {
   ownerId: string;
   sharedWith: string[];
   roles?: Record<string, TripRole>;
+  baseCurrency?: string; // devise de référence pour les soldes (défaut EUR)
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

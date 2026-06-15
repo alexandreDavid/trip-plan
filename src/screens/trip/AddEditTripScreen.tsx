@@ -87,12 +87,11 @@ export function AddEditTripScreen({ route, navigation }: Props) {
       if (isEditing && id) {
         await updateTrip(id, { name, destination, startDate, endDate });
       } else {
-        id = await createTrip(user.uid, {
-          name,
-          destination,
-          startDate,
-          endDate,
-        });
+        id = await createTrip(
+          user.uid,
+          { name, destination, startDate, endDate },
+          user.displayName ?? user.email?.split('@')[0] ?? undefined,
+        );
       }
       if (coverLocalUri && id) {
         const url = await uploadTripCoverImage(id, coverLocalUri);

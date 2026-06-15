@@ -8,6 +8,9 @@ import { TripDetailScreen } from '@/screens/trip/TripDetailScreen';
 import { AddEditTripScreen } from '@/screens/trip/AddEditTripScreen';
 import { AddEditEventScreen } from '@/screens/event/AddEditEventScreen';
 import { ShareTripScreen } from '@/screens/trip/ShareTripScreen';
+import { ExpensesScreen } from '@/screens/expense/ExpensesScreen';
+import { AddEditExpenseScreen } from '@/screens/expense/AddEditExpenseScreen';
+import { ParticipantsScreen } from '@/screens/expense/ParticipantsScreen';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { colors } from '@/theme';
 
@@ -49,6 +52,20 @@ export function RootNavigator() {
         name="ShareTrip"
         component={ShareTripScreen}
         options={{ title: 'Partager', presentation: 'modal' }}
+      />
+      <Stack.Screen name="Expenses" component={ExpensesScreen} options={{ title: 'Dépenses' }} />
+      <Stack.Screen
+        name="AddEditExpense"
+        component={AddEditExpenseScreen}
+        options={({ route }) => ({
+          title: route.params?.expenseId ? 'Modifier la dépense' : 'Nouvelle dépense',
+          presentation: 'modal',
+        })}
+      />
+      <Stack.Screen
+        name="Participants"
+        component={ParticipantsScreen}
+        options={{ title: 'Participants', presentation: 'modal' }}
       />
     </Stack.Navigator>
   );

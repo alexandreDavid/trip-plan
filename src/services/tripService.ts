@@ -19,7 +19,7 @@ import {
   deleteField,
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import { Collections } from '@/config/constants';
+import { Collections, DEFAULT_CURRENCY } from '@/config/constants';
 import { Trip, TripInput, Day, TripRole } from '@/types';
 import { getDaysBetween, dayKey } from '@/utils/dates';
 
@@ -46,7 +46,11 @@ async function commitInChunks(ops: Array<(batch: WriteBatch) => void>): Promise<
   }
 }
 
-export async function createTrip(ownerId: string, input: TripInput): Promise<string> {
+export async function createTrip(
+  ownerId: string,
+  input: TripInput,
+  ownerName?: string,
+): Promise<string> {
   const tripRef = doc(tripCol());
   const batch = writeBatch(db);
 
@@ -59,6 +63,7 @@ export async function createTrip(ownerId: string, input: TripInput): Promise<str
     ownerId,
     sharedWith: [],
     roles: {},
+    baseCurrency: DEFAULT_CURRENCY,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -71,6 +76,14 @@ export async function createTrip(ownerId: string, input: TripInput): Promise<str
       date: Timestamp.fromDate(date),
       order: idx,
     });
+  });
+
+  // L'owner est d'office un participant au partage des dépenses.
+  const participantRef = doc(collection(db, Collections.TRIPS, tripRef.id, Collections.PARTICIPANTS));
+  batch.set(participantRef, {
+    displayName: ownerName?.trim() || 'Moi',
+    uid: ownerId,
+    createdAt: serverTimestamp(),
   });
 
   await batch.commit();
@@ -231,10 +244,18 @@ export async function deleteTrip(tripId: string): Promise<void> {
     query(collectionGroup(db, Collections.EVENTS), where('tripId', '==', tripId)),
   );
   const daysSnap = await getDocs(daysCol(tripId));
+  const participantsSnap = await getDocs(
+    collection(db, Collections.TRIPS, tripId, Collections.PARTICIPANTS),
+  );
+  const expensesSnap = await getDocs(
+    collection(db, Collections.TRIPS, tripId, Collections.EXPENSES),
+  );
 
   const ops: Array<(batch: WriteBatch) => void> = [];
   eventsSnap.forEach((e) => ops.push((batch) => batch.delete(e.ref)));
   daysSnap.forEach((d) => ops.push((batch) => batch.delete(d.ref)));
+  participantsSnap.forEach((p) => ops.push((batch) => batch.delete(p.ref)));
+  expensesSnap.forEach((x) => ops.push((batch) => batch.delete(x.ref)));
   ops.push((batch) => batch.delete(doc(db, Collections.TRIPS, tripId)));
 
   await commitInChunks(ops);

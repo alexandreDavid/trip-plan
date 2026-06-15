@@ -44,24 +44,34 @@ export function TripDetailScreen({ route, navigation }: Props) {
   useLayoutEffect(() => {
     navigation.setOptions({
       title: trip?.name ?? 'Voyage',
-      headerRight: () =>
-        isOwner ? (
-          <View style={styles.headerActions}>
-            <Pressable onPress={() => navigation.navigate('ShareTrip', { tripId })} hitSlop={8}>
-              <Ionicons name="share-outline" size={22} color={colors.primary} />
-            </Pressable>
-            <Pressable
-              onPress={() => navigation.navigate('AddEditTrip', { tripId })}
-              hitSlop={8}
-              style={{ marginLeft: spacing.md }}
-            >
-              <Ionicons name="create-outline" size={22} color={colors.primary} />
-            </Pressable>
-            <Pressable onPress={handleDelete} hitSlop={8} style={{ marginLeft: spacing.md }}>
-              <Ionicons name="trash-outline" size={22} color={colors.danger} />
-            </Pressable>
-          </View>
-        ) : null,
+      headerRight: () => (
+        <View style={styles.headerActions}>
+          <Pressable onPress={() => navigation.navigate('Expenses', { tripId })} hitSlop={8}>
+            <Ionicons name="wallet-outline" size={22} color={colors.primary} />
+          </Pressable>
+          {isOwner && (
+            <>
+              <Pressable
+                onPress={() => navigation.navigate('ShareTrip', { tripId })}
+                hitSlop={8}
+                style={{ marginLeft: spacing.md }}
+              >
+                <Ionicons name="share-outline" size={22} color={colors.primary} />
+              </Pressable>
+              <Pressable
+                onPress={() => navigation.navigate('AddEditTrip', { tripId })}
+                hitSlop={8}
+                style={{ marginLeft: spacing.md }}
+              >
+                <Ionicons name="create-outline" size={22} color={colors.primary} />
+              </Pressable>
+              <Pressable onPress={handleDelete} hitSlop={8} style={{ marginLeft: spacing.md }}>
+                <Ionicons name="trash-outline" size={22} color={colors.danger} />
+              </Pressable>
+            </>
+          )}
+        </View>
+      ),
     });
   }, [navigation, trip, isOwner, tripId]);
 
