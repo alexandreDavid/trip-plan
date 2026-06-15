@@ -5,6 +5,7 @@ import {
   computeBalances,
   computeSettlements,
   sumExpensesInBase,
+  amountsSplitDiff,
   formatCents,
   formatMoney,
 } from '@/utils/expenses';
@@ -120,6 +121,24 @@ describe('formatage monétaire', () => {
 
   it('replie proprement sur une devise au code invalide', () => {
     expect(formatMoney(10, 'X')).toBe('10.00 X');
+  });
+});
+
+describe('amountsSplitDiff', () => {
+  it('vaut 0 quand la somme couvre le total', () => {
+    expect(amountsSplitDiff(50, [20, 30])).toBe(0);
+  });
+
+  it('positif quand il reste à répartir', () => {
+    expect(amountsSplitDiff(50, [20, 20])).toBe(10);
+  });
+
+  it('négatif quand on a trop réparti', () => {
+    expect(amountsSplitDiff(50, [20, 40])).toBe(-10);
+  });
+
+  it('ignore les valeurs non finies', () => {
+    expect(amountsSplitDiff(50, [50, NaN])).toBe(0);
   });
 });
 

@@ -102,6 +102,14 @@ export function sumExpensesInBase(expenses: Expense[]): number {
   return expenses.reduce((sum, e) => sum + e.amountInBase, 0);
 }
 
+// Mode 'amounts' : écart (devise de base, arrondi au centime) entre le total à
+// répartir et la somme des montants saisis. 0 = répartition complète et exacte ;
+// >0 = il reste à répartir ; <0 = trop réparti.
+export function amountsSplitDiff(total: number, amounts: number[]): number {
+  const sum = amounts.reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0);
+  return Math.round((total - sum) * 100) / 100;
+}
+
 // --- Formatage monétaire ---
 
 export function formatMoney(amount: number, currency: string): string {

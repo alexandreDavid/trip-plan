@@ -7,6 +7,7 @@ import { RootStackParamList, Participant } from '@/types';
 import { DEFAULT_CURRENCY } from '@/config/constants';
 import { useTrip } from '@/hooks/useTrip';
 import { useTripExpenses } from '@/hooks/useExpenses';
+import { useAllEvents } from '@/hooks/useEvents';
 import { ExpenseCard } from '@/components/expense/ExpenseCard';
 import { BalancePanel } from '@/components/expense/BalancePanel';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
@@ -20,11 +21,16 @@ export function ExpensesScreen({ route, navigation }: Props) {
   const { trip, canEdit } = useTrip(tripId);
   const { participants, expenses, balances, settlements, totalInBase, loading } =
     useTripExpenses(tripId);
+  const { events } = useAllEvents(tripId);
 
   const baseCurrency = trip?.baseCurrency ?? DEFAULT_CURRENCY;
   const participantsById = useMemo(
     () => Object.fromEntries(participants.map((p) => [p.id, p])) as Record<string, Participant>,
     [participants],
+  );
+  const eventNameById = useMemo(
+    () => Object.fromEntries(events.map((e) => [e.id, e.name])) as Record<string, string>,
+    [events],
   );
 
   useLayoutEffect(() => {
@@ -84,6 +90,7 @@ export function ExpensesScreen({ route, navigation }: Props) {
                     expense={item}
                     participantsById={participantsById}
                     baseCurrency={baseCurrency}
+                    eventName={item.eventId ? eventNameById[item.eventId] : undefined}
                     onPress={
                       canEdit
                         ? () => navigation.navigate('AddEditExpense', { tripId, expenseId: item.id })

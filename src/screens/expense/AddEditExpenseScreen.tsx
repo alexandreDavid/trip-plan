@@ -8,6 +8,7 @@ import { DEFAULT_CURRENCY } from '@/config/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTrip } from '@/hooks/useTrip';
 import { useTripExpenses } from '@/hooks/useExpenses';
+import { useAllEvents } from '@/hooks/useEvents';
 import { ExpenseForm } from '@/components/expense/ExpenseForm';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -21,6 +22,7 @@ export function AddEditExpenseScreen({ route, navigation }: Props) {
   const { user } = useAuth();
   const { trip } = useTrip(tripId);
   const { participants, expenses, loading } = useTripExpenses(tripId);
+  const { events } = useAllEvents(tripId);
   const [submitting, setSubmitting] = useState(false);
 
   const baseCurrency = trip?.baseCurrency ?? DEFAULT_CURRENCY;
@@ -91,6 +93,7 @@ export function AddEditExpenseScreen({ route, navigation }: Props) {
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <ExpenseForm
         participants={participants}
+        events={events}
         baseCurrency={baseCurrency}
         currentUid={user?.uid}
         initialExpense={initialExpense}

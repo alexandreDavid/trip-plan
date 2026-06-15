@@ -1,16 +1,25 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Expense, ExpenseInput, ExpenseCategory, Participant } from '@/types';
+import {
+  Expense,
+  ExpenseInput,
+  ExpenseCategory,
+  Participant,
+  SplitMode,
+  TripEvent,
+} from '@/types';
 import { CURRENCIES } from '@/config/constants';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { colors, radius, spacing, fontSize } from '@/theme';
 import { formatDate } from '@/utils/dates';
+import { amountsSplitDiff } from '@/utils/expenses';
 import { expenseCategoryMeta, EXPENSE_CATEGORIES } from './expenseMeta';
 
 interface Props {
   participants: Participant[];
+  events: TripEvent[];
   baseCurrency: string;
   currentUid?: string;
   initialExpense?: Expense;
@@ -22,8 +31,15 @@ const parseNum = (s: string): number => parseFloat(s.replace(',', '.'));
 
 const todayKey = (): string => formatDate(new Date(), 'yyyy-MM-dd');
 
+const SPLIT_MODES: { mode: SplitMode; label: string }[] = [
+  { mode: 'equal', label: 'Égal' },
+  { mode: 'shares', label: 'Parts' },
+  { mode: 'amounts', label: 'Montants' },
+];
+
 export function ExpenseForm({
   participants,
+  events,
   baseCurrency,
   currentUid,
   initialExpense,
@@ -44,9 +60,18 @@ export function ExpenseForm({
     initialExpense?.category ?? ExpenseCategory.FOOD,
   );
   const [paidBy, setPaidBy] = useState(defaultPayer);
+  const [splitMode, setSplitMode] = useState<SplitMode>(initialExpense?.splitMode ?? 'equal');
   const [splitBetween, setSplitBetween] = useState<string[]>(
     initialExpense?.splitBetween ?? participants.map((p) => p.id),
   );
+  const [shareInputs, setShareInputs] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    if (initialExpense?.shares) {
+      for (const [id, v] of Object.entries(initialExpense.shares)) init[id] = String(v);
+    }
+    return init;
+  });
+  const [eventId, setEventId] = useState<string | undefined>(initialExpense?.eventId);
   const [dateInput, setDateInput] = useState(
     initialExpense ? formatDate(initialExpense.date, 'yyyy-MM-dd') : todayKey(),
   );
@@ -54,18 +79,33 @@ export function ExpenseForm({
 
   const isForeign = currency !== baseCurrency;
 
-  const perPersonPreview = useMemo(() => {
+  const amountInBase = useMemo(() => {
     const a = parseNum(amount);
     const r = isForeign ? parseNum(rate) : 1;
-    if (!a || !r || splitBetween.length === 0) return null;
-    return (a * r) / splitBetween.length;
-  }, [amount, rate, isForeign, splitBetween.length]);
+    if (!a || !r || a <= 0 || r <= 0) return 0;
+    return a * r;
+  }, [amount, rate, isForeign]);
 
-  const toggleSplit = (id: string) => {
-    setSplitBetween((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
-  };
+  const shareValue = (id: string): string =>
+    shareInputs[id] ?? (splitMode === 'shares' ? '1' : '');
+
+  // Montants saisis (mode 'amounts') pour le contrôle du reste à répartir.
+  const amountsDiff = useMemo(() => {
+    if (splitMode !== 'amounts') return 0;
+    const values = splitBetween.map((id) => parseNum(shareValue(id)) || 0);
+    return amountsSplitDiff(amountInBase, values);
+  }, [splitMode, splitBetween, shareInputs, amountInBase]);
+
+  const equalPerPerson = useMemo(() => {
+    if (splitMode !== 'equal' || amountInBase <= 0 || splitBetween.length === 0) return null;
+    return amountInBase / splitBetween.length;
+  }, [splitMode, amountInBase, splitBetween.length]);
+
+  const toggleSplit = (id: string) =>
+    setSplitBetween((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  const setShare = (id: string, value: string) =>
+    setShareInputs((prev) => ({ ...prev, [id]: value }));
 
   const parseDate = (s: string): Date | undefined => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return undefined;
@@ -73,18 +113,35 @@ export function ExpenseForm({
     return isNaN(d.getTime()) ? undefined : d;
   };
 
+  const buildShares = (): Record<string, number> | undefined => {
+    if (splitMode === 'equal') return undefined;
+    const out: Record<string, number> = {};
+    for (const id of splitBetween) {
+      const raw = shareInputs[id];
+      const n = raw == null || raw === '' ? (splitMode === 'shares' ? 1 : 0) : parseNum(raw);
+      out[id] = Number.isNaN(n) ? (splitMode === 'shares' ? 1 : 0) : n;
+    }
+    return out;
+  };
+
   const handleSubmit = () => {
     const errs: Record<string, string> = {};
     const amountNum = parseNum(amount);
     const rateNum = isForeign ? parseNum(rate) : 1;
     const date = parseDate(dateInput);
+    const shares = buildShares();
 
     if (!label.trim()) errs.label = 'Le libellé est requis';
     if (!amountNum || amountNum <= 0) errs.amount = 'Montant invalide';
     if (isForeign && (!rateNum || rateNum <= 0)) errs.rate = 'Taux invalide';
     if (!paidBy) errs.paidBy = 'Choisissez qui a payé';
     if (splitBetween.length === 0) errs.split = 'Au moins un participant';
-    if (!date) errs.date = 'Date invalide (AAAA-MM-JJ)';
+    if (splitMode === 'shares' && shares && Object.values(shares).reduce((a, b) => a + b, 0) <= 0) {
+      errs.split = 'Indiquez au moins une part';
+    }
+    if (splitMode === 'amounts' && amountsDiff !== 0) {
+      errs.split = 'La somme des montants doit égaler le total';
+    }
 
     setErrors(errs);
     if (Object.keys(errs).length > 0 || !date) return;
@@ -96,10 +153,12 @@ export function ExpenseForm({
       rate: rateNum,
       amountInBase: amountNum * rateNum,
       paidBy,
-      splitMode: 'equal',
+      splitMode,
       splitBetween,
+      shares,
       category,
       date,
+      eventId,
     });
   };
 
@@ -107,18 +166,14 @@ export function ExpenseForm({
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Input label="Libellé *" value={label} onChangeText={setLabel} error={errors.label} placeholder="Dîner, taxi, musée…" />
 
-      <View style={styles.amountRow}>
-        <View style={{ flex: 1 }}>
-          <Input
-            label="Montant *"
-            value={amount}
-            onChangeText={setAmount}
-            keyboardType="decimal-pad"
-            placeholder="0"
-            error={errors.amount}
-          />
-        </View>
-      </View>
+      <Input
+        label="Montant *"
+        value={amount}
+        onChangeText={setAmount}
+        keyboardType="decimal-pad"
+        placeholder="0"
+        error={errors.amount}
+      />
 
       <Text style={styles.fieldLabel}>Devise</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
@@ -138,7 +193,7 @@ export function ExpenseForm({
       )}
 
       <Text style={styles.fieldLabel}>Catégorie</Text>
-      <View style={styles.catGrid}>
+      <View style={styles.wrapRow}>
         {EXPENSE_CATEGORIES.map((cat) => {
           const meta = expenseCategoryMeta[cat];
           const active = cat === category;
@@ -159,29 +214,99 @@ export function ExpenseForm({
 
       <Text style={styles.fieldLabel}>Payé par *</Text>
       {errors.paidBy && <Text style={styles.errorText}>{errors.paidBy}</Text>}
-      <View style={styles.catGrid}>
+      <View style={styles.wrapRow}>
         {participants.map((p) => (
           <Chip key={p.id} label={p.displayName} active={p.id === paidBy} onPress={() => setPaidBy(p.id)} />
         ))}
       </View>
 
-      <Text style={styles.fieldLabel}>Partagé entre *</Text>
-      {errors.split && <Text style={styles.errorText}>{errors.split}</Text>}
-      <View style={styles.catGrid}>
-        {participants.map((p) => (
-          <Chip
-            key={p.id}
-            label={p.displayName}
-            active={splitBetween.includes(p.id)}
-            onPress={() => toggleSplit(p.id)}
-          />
+      <Text style={styles.fieldLabel}>Répartition</Text>
+      <View style={styles.segment}>
+        {SPLIT_MODES.map((m) => (
+          <Pressable
+            key={m.mode}
+            onPress={() => setSplitMode(m.mode)}
+            style={[styles.segmentItem, splitMode === m.mode && styles.segmentItemActive]}
+          >
+            <Text style={[styles.segmentText, splitMode === m.mode && styles.segmentTextActive]}>
+              {m.label}
+            </Text>
+          </Pressable>
         ))}
       </View>
+      {errors.split && <Text style={styles.errorText}>{errors.split}</Text>}
 
-      {perPersonPreview != null && (
+      {splitMode === 'equal' ? (
+        <View style={styles.wrapRow}>
+          {participants.map((p) => (
+            <Chip
+              key={p.id}
+              label={p.displayName}
+              active={splitBetween.includes(p.id)}
+              onPress={() => toggleSplit(p.id)}
+            />
+          ))}
+        </View>
+      ) : (
+        <View>
+          {participants.map((p) => {
+            const included = splitBetween.includes(p.id);
+            return (
+              <View key={p.id} style={styles.shareRow}>
+                <Pressable onPress={() => toggleSplit(p.id)} style={styles.shareCheck} hitSlop={6}>
+                  <Ionicons
+                    name={included ? 'checkbox' : 'square-outline'}
+                    size={22}
+                    color={included ? colors.primary : colors.textMuted}
+                  />
+                </Pressable>
+                <Text style={styles.shareName} numberOfLines={1}>
+                  {p.displayName}
+                </Text>
+                {included && (
+                  <TextInput
+                    value={shareValue(p.id)}
+                    onChangeText={(v) => setShare(p.id, v)}
+                    keyboardType="decimal-pad"
+                    placeholder={splitMode === 'shares' ? 'parts' : baseCurrency}
+                    placeholderTextColor={colors.textMuted}
+                    style={styles.shareInput}
+                  />
+                )}
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      {equalPerPerson != null && (
         <Text style={styles.preview}>
-          Soit {perPersonPreview.toFixed(2)} {baseCurrency} par personne
+          Soit {equalPerPerson.toFixed(2)} {baseCurrency} par personne
         </Text>
+      )}
+      {splitMode === 'amounts' && amountInBase > 0 && (
+        <Text style={[styles.preview, amountsDiff === 0 ? styles.previewOk : styles.previewWarn]}>
+          {amountsDiff === 0
+            ? `Réparti intégralement (${amountInBase.toFixed(2)} ${baseCurrency})`
+            : `Reste à répartir : ${amountsDiff.toFixed(2)} ${baseCurrency}`}
+        </Text>
+      )}
+
+      {events.length > 0 && (
+        <>
+          <Text style={styles.fieldLabel}>Lier à un événement (optionnel)</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+            <Chip label="Aucun" active={!eventId} onPress={() => setEventId(undefined)} />
+            {events.map((ev) => (
+              <Chip
+                key={ev.id}
+                label={ev.name}
+                active={eventId === ev.id}
+                onPress={() => setEventId(ev.id)}
+              />
+            ))}
+          </ScrollView>
+        </>
       )}
 
       <Input
@@ -204,10 +329,7 @@ export function ExpenseForm({
 
 function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   return (
-    <Pressable
-      onPress={onPress}
-      style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}
-    >
+    <Pressable onPress={onPress} style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}>
       <Text style={[styles.chipText, active && styles.chipTextActive]} numberOfLines={1}>
         {label}
       </Text>
@@ -217,13 +339,7 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
 
 const styles = StyleSheet.create({
   container: { padding: spacing.md, paddingBottom: spacing.xl },
-  amountRow: { flexDirection: 'row', gap: spacing.sm },
-  fieldLabel: {
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
+  fieldLabel: { fontSize: fontSize.sm, fontWeight: '600', color: colors.text, marginBottom: spacing.xs },
   chipScroll: { marginBottom: spacing.md },
   chip: {
     paddingHorizontal: spacing.md,
@@ -237,7 +353,7 @@ const styles = StyleSheet.create({
   chipInactive: { borderColor: colors.border, backgroundColor: colors.surface },
   chipText: { fontSize: fontSize.sm, color: colors.text },
   chipTextActive: { color: '#fff', fontWeight: '600' },
-  catGrid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: spacing.md },
+  wrapRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: spacing.md },
   catChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -252,11 +368,34 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   catText: { fontSize: fontSize.sm, color: colors.textMuted },
-  preview: {
-    fontSize: fontSize.sm,
-    color: colors.textMuted,
-    marginBottom: spacing.md,
-    fontStyle: 'italic',
+  segment: {
+    flexDirection: 'row',
+    backgroundColor: colors.border,
+    borderRadius: radius.md,
+    padding: 2,
+    marginBottom: spacing.sm,
   },
+  segmentItem: { flex: 1, paddingVertical: spacing.xs + 2, alignItems: 'center', borderRadius: radius.sm },
+  segmentItemActive: { backgroundColor: colors.surface },
+  segmentText: { fontSize: fontSize.sm, color: colors.textMuted, fontWeight: '600' },
+  segmentTextActive: { color: colors.primary },
+  shareRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
+  shareCheck: { padding: 2 },
+  shareName: { flex: 1, fontSize: fontSize.md, color: colors.text },
+  shareInput: {
+    width: 90,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs + 2,
+    fontSize: fontSize.md,
+    color: colors.text,
+    textAlign: 'right',
+    backgroundColor: colors.surface,
+  },
+  preview: { fontSize: fontSize.sm, color: colors.textMuted, marginBottom: spacing.md, fontStyle: 'italic' },
+  previewOk: { color: colors.success },
+  previewWarn: { color: colors.warning, fontStyle: 'normal', fontWeight: '600' },
   errorText: { color: colors.danger, fontSize: fontSize.xs, marginBottom: spacing.xs },
 });

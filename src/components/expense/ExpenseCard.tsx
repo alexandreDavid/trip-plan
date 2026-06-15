@@ -11,10 +11,11 @@ interface Props {
   expense: Expense;
   participantsById: Record<string, Participant>;
   baseCurrency: string;
+  eventName?: string;
   onPress?: () => void;
 }
 
-export function ExpenseCard({ expense, participantsById, baseCurrency, onPress }: Props) {
+export function ExpenseCard({ expense, participantsById, baseCurrency, eventName, onPress }: Props) {
   const meta = expenseCategoryMeta[expense.category];
   const payer = participantsById[expense.paidBy]?.displayName ?? '?';
   const splitCount = expense.splitBetween.length;
@@ -40,6 +41,14 @@ export function ExpenseCard({ expense, participantsById, baseCurrency, onPress }
         </View>
         {isForeign && (
           <Text style={styles.converted}>≈ {formatMoney(expense.amountInBase, baseCurrency)}</Text>
+        )}
+        {eventName && (
+          <View style={styles.linkRow}>
+            <Ionicons name="link-outline" size={12} color={colors.textMuted} />
+            <Text style={styles.linkText} numberOfLines={1}>
+              {eventName}
+            </Text>
+          </View>
         )}
       </View>
     </Pressable>
@@ -71,4 +80,7 @@ const styles = StyleSheet.create({
   meta: { flex: 1, fontSize: fontSize.sm, color: colors.textMuted, marginTop: 2 },
   date: { fontSize: fontSize.xs, color: colors.textMuted, marginTop: 2 },
   converted: { fontSize: fontSize.xs, color: colors.textMuted, marginTop: 2, fontStyle: 'italic' },
+  linkRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  linkText: { fontSize: fontSize.xs, color: colors.textMuted },
 });
+
