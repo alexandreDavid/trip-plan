@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +22,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Map'>;
 // Le require ici (et non en import de tête) évite de casser le démarrage de
 // l'app dans Expo Go ; il ne s'exécute qu'à l'ouverture de cet écran.
 function loadMaps(): any | null {
+  if (Platform.OS === 'web') return null; // react-native-maps n'est pas supporté sur le web
   try {
     return require('react-native-maps');
   } catch {
