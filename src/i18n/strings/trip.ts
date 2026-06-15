@@ -62,6 +62,7 @@ const trip = {
     'trip.joinAction': 'Rejoindre',
     'trip.joinInvalid': 'Code ou lien invalide',
     'trip.joinFailed': 'Impossible de rejoindre (lien invalide ou déjà membre).',
+    'trip.manualParticipantHint': 'Ajoutez des personnes par leur nom (sans compte) pour partager les dépenses.',
   } as Record<string, string>,
   en: {
     // Trip detail
@@ -125,6 +126,7 @@ const trip = {
     'trip.joinAction': 'Join',
     'trip.joinInvalid': 'Invalid code or link',
     'trip.joinFailed': 'Could not join (invalid link or already a member).',
+    'trip.manualParticipantHint': 'Add people by name (no account) to split expenses.',
   } as Record<string, string>,
   pt: {
     // Detalhe da viagem
@@ -188,6 +190,7 @@ const trip = {
     'trip.joinAction': 'Entrar',
     'trip.joinInvalid': 'Código ou link inválido',
     'trip.joinFailed': 'Não foi possível entrar (link inválido ou já é membro).',
+    'trip.manualParticipantHint': 'Adicione pessoas pelo nome (sem conta) para dividir as despesas.',
   } as Record<string, string>,
 };
 

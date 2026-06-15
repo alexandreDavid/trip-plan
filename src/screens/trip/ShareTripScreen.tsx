@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, FlatList, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/types';
@@ -8,7 +8,7 @@ import { useTrip } from '@/hooks/useTrip';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { SharedUserItem } from '@/components/share/SharedUserItem';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { ParticipantsManager } from '@/components/expense/ParticipantsManager';
 import { spacing, radius, fontSize, Palette } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
@@ -39,11 +39,8 @@ export function ShareTripScreen({ route }: Props) {
     setSubmitting(true);
     const result = await shareWithEmail(email);
     setSubmitting(false);
-    if (!result.ok) {
-      setError(result.error ?? t('trip.unknownError'));
-    } else {
-      setEmail('');
-    }
+    if (!result.ok) setError(result.error ?? t('trip.unknownError'));
+    else setEmail('');
   };
 
   const handleRemove = (userId: string, name: string) => {
@@ -55,10 +52,12 @@ export function ShareTripScreen({ route }: Props) {
 
   const handleShareLink = async () => {
     if (!inviteToken) return;
-    const link = buildInviteLink(tripId, inviteToken);
-    const code = buildInviteCode(tripId, inviteToken);
     await Share.share({
-      message: t('trip.inviteShareMessage', { trip: trip?.name ?? '', link, code }),
+      message: t('trip.inviteShareMessage', {
+        trip: trip?.name ?? '',
+        link: buildInviteLink(tripId, inviteToken),
+        code: buildInviteCode(tripId, inviteToken),
+      }),
     });
   };
 
@@ -80,10 +79,9 @@ export function ShareTripScreen({ route }: Props) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
-      <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.container}>
         {isOwner && (
           <>
-            {/* Invitation par lien */}
             <Text style={styles.title}>{t('trip.inviteLinkTitle')}</Text>
             <Text style={styles.subtitle}>{t('trip.inviteLinkHint')}</Text>
             {inviteToken ? (
@@ -93,20 +91,14 @@ export function ShareTripScreen({ route }: Props) {
                 </Text>
                 <View style={styles.linkActions}>
                   <Button title={t('trip.shareLink')} onPress={handleShareLink} style={styles.flexBtn} />
-                  <Button
-                    title={t('trip.revokeLink')}
-                    onPress={handleRevokeLink}
-                    variant="ghost"
-                    style={styles.flexBtn}
-                  />
+                  <Button title={t('trip.revokeLink')} onPress={handleRevokeLink} variant="ghost" style={styles.flexBtn} />
                 </View>
               </View>
             ) : (
               <Button title={t('trip.createInviteLink')} onPress={handleCreateLink} loading={linkBusy} />
             )}
 
-            {/* Invitation par email */}
-            <Text style={[styles.title, { marginTop: spacing.xl }]}>{t('trip.inviteByEmail')}</Text>
+            <Text style={[styles.title, styles.sectionGap]}>{t('trip.inviteByEmail')}</Text>
             <Text style={styles.subtitle}>{t('trip.shareExplanation')}</Text>
             <Input
               value={email}
@@ -120,31 +112,28 @@ export function ShareTripScreen({ route }: Props) {
           </>
         )}
 
-        <Text style={[styles.title, isOwner && { marginTop: spacing.xl }]}>
-          {t('trip.sharedAccess')}
-        </Text>
+        <Text style={[styles.title, isOwner ? styles.sectionGap : undefined]}>{t('trip.sharedAccess')}</Text>
         {!isOwner && <Text style={styles.subtitle}>{t('trip.membersReadonly')}</Text>}
         {members.length === 0 ? (
-          <EmptyState icon="people-outline" title={t('trip.noOne')} subtitle={t('trip.noShare')} />
+          <Text style={styles.muted}>{t('trip.noShare')}</Text>
         ) : (
-          <FlatList
-            data={members}
-            keyExtractor={(m) => m.user.uid}
-            renderItem={({ item }) => (
-              <SharedUserItem
-                user={item.user}
-                role={item.role}
-                onToggleRole={
-                  isOwner
-                    ? () => changeRole(item.user.uid, item.role === 'editor' ? 'viewer' : 'editor')
-                    : undefined
-                }
-                onRemove={isOwner ? () => handleRemove(item.user.uid, item.user.displayName) : undefined}
-              />
-            )}
-          />
+          members.map((m) => (
+            <SharedUserItem
+              key={m.user.uid}
+              user={m.user}
+              role={m.role}
+              onToggleRole={
+                isOwner ? () => changeRole(m.user.uid, m.role === 'editor' ? 'viewer' : 'editor') : undefined
+              }
+              onRemove={isOwner ? () => handleRemove(m.user.uid, m.user.displayName) : undefined}
+            />
+          ))
         )}
-      </View>
+
+        <Text style={[styles.title, styles.sectionGap]}>{t('nav.expenseParticipants')}</Text>
+        <Text style={styles.subtitle}>{t('trip.manualParticipantHint')}</Text>
+        <ParticipantsManager tripId={tripId} />
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -152,9 +141,11 @@ export function ShareTripScreen({ route }: Props) {
 const makeStyles = (colors: Palette) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.background },
-    container: { flex: 1, padding: spacing.md },
+    container: { padding: spacing.md, paddingBottom: spacing.xl },
     title: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text, marginBottom: spacing.xs },
+    sectionGap: { marginTop: spacing.xl },
     subtitle: { fontSize: fontSize.sm, color: colors.textMuted, marginBottom: spacing.md },
+    muted: { fontSize: fontSize.sm, color: colors.textMuted, fontStyle: 'italic', paddingVertical: spacing.sm },
     linkBox: {
       backgroundColor: colors.surface,
       borderRadius: radius.md,
