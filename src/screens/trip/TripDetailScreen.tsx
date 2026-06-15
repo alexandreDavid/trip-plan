@@ -11,6 +11,7 @@ import { DaySelector } from '@/components/trip/DaySelector';
 import { TripActionBar } from '@/components/trip/TripActionBar';
 import { EventCard } from '@/components/event/EventCard';
 import { BudgetSummary } from '@/components/budget/BudgetSummary';
+import { DEFAULT_CURRENCY } from '@/config/constants';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { deleteEvent } from '@/services/eventService';
@@ -120,7 +121,11 @@ export function TripDetailScreen({ route, navigation }: Props) {
               { icon: 'map-outline', label: t('trip.actions.map'), onPress: () => navigation.navigate('Map', { tripId }) },
             ]}
           />
-          <BudgetSummary total={budget.total} byType={budget.byType} />
+          <BudgetSummary
+            total={budget.total}
+            byType={budget.byType}
+            currency={trip.baseCurrency ?? DEFAULT_CURRENCY}
+          />
         </View>
 
         <View style={styles.daySelectorWrap}>
@@ -144,6 +149,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
               renderItem={({ item }) => (
                 <EventCard
                   event={item}
+                  currency={trip.baseCurrency ?? DEFAULT_CURRENCY}
                   editable={canEdit}
                   onDelete={() => handleDeleteEvent(item.id)}
                   onPress={

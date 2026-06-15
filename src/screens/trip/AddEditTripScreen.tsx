@@ -8,6 +8,7 @@ import { RootStackParamList } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { createTrip, getTrip, updateTrip } from '@/services/tripService';
 import { uploadTripCoverImage } from '@/services/storageService';
+import { CURRENCIES, DEFAULT_CURRENCY } from '@/config/constants';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { spacing, fontSize, radius, Palette } from '@/theme';
@@ -32,6 +33,7 @@ export function AddEditTripScreen({ route, navigation }: Props) {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [startDateInput, setStartDateInput] = useState('');
   const [endDateInput, setEndDateInput] = useState('');
+  const [baseCurrency, setBaseCurrency] = useState<string>(DEFAULT_CURRENCY);
   const [coverLocalUri, setCoverLocalUri] = useState<string | undefined>();
   const [coverRemoteUrl, setCoverRemoteUrl] = useState<string | undefined>();
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -48,6 +50,7 @@ export function AddEditTripScreen({ route, navigation }: Props) {
       setEndDate(trip.endDate.toDate());
       setStartDateInput(formatDate(trip.startDate, 'yyyy-MM-dd'));
       setEndDateInput(formatDate(trip.endDate, 'yyyy-MM-dd'));
+      setBaseCurrency(trip.baseCurrency ?? DEFAULT_CURRENCY);
       setCoverRemoteUrl(trip.coverImageURL);
     })();
   }, [tripId]);
@@ -90,11 +93,11 @@ export function AddEditTripScreen({ route, navigation }: Props) {
     try {
       let id = tripId;
       if (isEditing && id) {
-        await updateTrip(id, { name, destination, startDate, endDate });
+        await updateTrip(id, { name, destination, startDate, endDate, baseCurrency });
       } else {
         id = await createTrip(
           user.uid,
-          { name, destination, startDate, endDate },
+          { name, destination, startDate, endDate, baseCurrency },
           user.displayName ?? user.email?.split('@')[0] ?? undefined,
         );
       }
@@ -160,6 +163,22 @@ export function AddEditTripScreen({ route, navigation }: Props) {
           </View>
         </View>
 
+        <Text style={styles.fieldLabel}>{t('trip.currency')}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.currencyScroll}>
+          {CURRENCIES.map((c) => {
+            const active = c === baseCurrency;
+            return (
+              <Pressable
+                key={c}
+                onPress={() => setBaseCurrency(c)}
+                style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}
+              >
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>{c}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
         <Button
           title={isEditing ? t('common.save') : t('trip.create')}
           onPress={handleSubmit}
@@ -179,4 +198,22 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   coverLabel: { marginTop: spacing.xs, color: colors.textMuted, fontSize: fontSize.sm },
   row: { flexDirection: 'row', gap: spacing.sm },
   half: { flex: 1 },
+  fieldLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  currencyScroll: { marginBottom: spacing.lg },
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    marginRight: spacing.xs,
+  },
+  chipActive: { borderColor: colors.primary, backgroundColor: colors.primary },
+  chipInactive: { borderColor: colors.border, backgroundColor: colors.surface },
+  chipText: { fontSize: fontSize.sm, color: colors.text },
+  chipTextActive: { color: '#fff', fontWeight: '600' },
 });

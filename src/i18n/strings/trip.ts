@@ -19,6 +19,7 @@ const trip = {
     'trip.destination': 'Destination *',
     'trip.startDate': 'Debut (YYYY-MM-DD) *',
     'trip.endDate': 'Fin (YYYY-MM-DD) *',
+    'trip.currency': 'Devise',
     'trip.create': 'Creer le voyage',
 
     // Jours
@@ -64,6 +65,7 @@ const trip = {
     'trip.destination': 'Destination *',
     'trip.startDate': 'Start (YYYY-MM-DD) *',
     'trip.endDate': 'End (YYYY-MM-DD) *',
+    'trip.currency': 'Currency',
     'trip.create': 'Create trip',
 
     // Days

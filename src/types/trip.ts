@@ -36,4 +36,5 @@ export type TripInput = {
   startDate: Date;
   endDate: Date;
   coverImageURL?: string;
+  baseCurrency?: string;
 };

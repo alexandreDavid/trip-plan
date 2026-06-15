@@ -7,11 +7,13 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
 import type { TranslateFn } from '@/i18n/I18nContext';
 import { formatTime } from '@/utils/dates';
-import { formatBudget } from '@/utils/budget';
+import { formatMoney } from '@/utils/expenses';
+import { DEFAULT_CURRENCY } from '@/config/constants';
 import { eventMeta } from './eventMeta';
 
 interface Props {
   event: TripEvent;
+  currency?: string;
   onPress?: () => void;
   onDelete?: () => void;
   editable?: boolean;
@@ -52,7 +54,7 @@ function getSubtitle(event: TripEvent): string | null {
   }
 }
 
-export function EventCard({ event, onPress, onDelete, editable }: Props) {
+export function EventCard({ event, currency = DEFAULT_CURRENCY, onPress, onDelete, editable }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const t = useT();
@@ -73,7 +75,9 @@ export function EventCard({ event, onPress, onDelete, editable }: Props) {
           <Text style={styles.name} numberOfLines={1}>
             {event.name}
           </Text>
-          {event.budget != null && <Text style={styles.budget}>{formatBudget(event.budget)}</Text>}
+          {event.budget != null && (
+            <Text style={styles.budget}>{formatMoney(event.budget, currency)}</Text>
+          )}
         </View>
         {subtitle && (
           <Text style={styles.subtitle} numberOfLines={1}>

@@ -67,7 +67,7 @@ export async function createTrip(
     ownerId,
     sharedWith: [],
     roles: {},
-    baseCurrency: DEFAULT_CURRENCY,
+    baseCurrency: input.baseCurrency ?? DEFAULT_CURRENCY,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -180,7 +180,7 @@ export function subscribeToDays(
 
 export async function updateTrip(
   tripId: string,
-  updates: Partial<Pick<Trip, 'name' | 'destination' | 'coverImageURL'>> & {
+  updates: Partial<Pick<Trip, 'name' | 'destination' | 'coverImageURL' | 'baseCurrency'>> & {
     startDate?: Date;
     endDate?: Date;
   },

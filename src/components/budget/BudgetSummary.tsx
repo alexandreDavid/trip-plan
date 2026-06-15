@@ -4,15 +4,16 @@ import { EventType } from '@/types';
 import { spacing, radius, fontSize, Palette } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
-import { formatBudget } from '@/utils/budget';
+import { formatMoney } from '@/utils/expenses';
 import { eventMeta } from '@/components/event/eventMeta';
 
 interface Props {
   total: number;
   byType: Record<EventType, number>;
+  currency: string;
 }
 
-export function BudgetSummary({ total, byType }: Props) {
+export function BudgetSummary({ total, byType, currency }: Props) {
   const { colors } = useTheme();
   const t = useT();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -20,7 +21,7 @@ export function BudgetSummary({ total, byType }: Props) {
     <View style={styles.container}>
       <View style={styles.totalRow}>
         <Text style={styles.totalLabel}>{t('trip.budgetTotal')}</Text>
-        <Text style={styles.totalValue}>{formatBudget(total)}</Text>
+        <Text style={styles.totalValue}>{formatMoney(total, currency)}</Text>
       </View>
       <View style={styles.breakdown}>
         {(Object.keys(byType) as EventType[]).map((type) => {
@@ -29,7 +30,7 @@ export function BudgetSummary({ total, byType }: Props) {
             <View key={type} style={styles.item}>
               <View style={[styles.dot, { backgroundColor: meta.color }]} />
               <Text style={styles.itemLabel}>{t(meta.labelKey)}</Text>
-              <Text style={styles.itemValue}>{formatBudget(byType[type])}</Text>
+              <Text style={styles.itemValue}>{formatMoney(byType[type], currency)}</Text>
             </View>
           );
         })}

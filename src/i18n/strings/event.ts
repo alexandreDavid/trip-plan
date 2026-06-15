@@ -16,7 +16,7 @@ const event = {
     'event.start': 'Début',
     'event.end': 'Fin',
     'event.time': 'Heure',
-    'event.budgetLabel': 'Budget (EUR)',
+    'event.budgetLabel': 'Budget',
     'event.notes': 'Notes',
 
     // EventForm — modes de transport
@@ -46,7 +46,7 @@ const event = {
     'event.start': 'Start',
     'event.end': 'End',
     'event.time': 'Time',
-    'event.budgetLabel': 'Budget (EUR)',
+    'event.budgetLabel': 'Budget',
     'event.notes': 'Notes',
 
     // EventForm — transport modes
