@@ -99,8 +99,14 @@ export function AddEditTripScreen({ route, navigation }: Props) {
         );
       }
       if (coverLocalUri && id) {
-        const url = await uploadTripCoverImage(id, coverLocalUri);
-        await updateTrip(id, { coverImageURL: url });
+        // Upload non bloquant : Cloud Storage peut être indisponible (plan
+        // gratuit). On n'échoue pas la création/édition du voyage pour autant.
+        try {
+          const url = await uploadTripCoverImage(id, coverLocalUri);
+          await updateTrip(id, { coverImageURL: url });
+        } catch {
+          Alert.alert(t('common.error'), t('common.imageUploadFailed'));
+        }
       }
       navigation.goBack();
     } catch (err) {

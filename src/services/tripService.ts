@@ -8,6 +8,7 @@ import {
   query,
   where,
   orderBy,
+  setDoc,
   writeBatch,
   WriteBatch,
   serverTimestamp,
@@ -52,9 +53,12 @@ export async function createTrip(
   ownerName?: string,
 ): Promise<string> {
   const tripRef = doc(tripCol());
-  const batch = writeBatch(db);
 
-  batch.set(tripRef, {
+  // IMPORTANT : on crée d'abord le doc trip, PUIS ses sous-collections.
+  // Les règles Firestore des days/participants appellent getTrip() ; or dans un
+  // batch, get() ne voit pas les écritures en attente du même batch. Écrire le
+  // trip et ses enfants dans un seul batch ferait donc échouer les règles.
+  await setDoc(tripRef, {
     name: input.name,
     destination: input.destination,
     startDate: Timestamp.fromDate(input.startDate),
@@ -68,6 +72,7 @@ export async function createTrip(
     updatedAt: serverTimestamp(),
   });
 
+  const batch = writeBatch(db);
   const days = getDaysBetween(input.startDate, input.endDate);
   days.forEach((date, idx) => {
     const dayRef = doc(daysCol(tripRef.id));

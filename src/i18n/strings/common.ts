@@ -10,6 +10,8 @@ const common = {
     'common.error': 'Erreur',
     'common.loading': 'Chargement…',
     'common.required': 'requis',
+    'common.imageUploadFailed':
+      "L'image n'a pas pu être envoyée (Cloud Storage nécessite le plan Blaze). Le voyage a été enregistré sans image.",
 
     'nav.myTrips': 'Mes voyages',
     'nav.sharedTrips': 'Partagés',
@@ -50,6 +52,8 @@ const common = {
     'common.error': 'Error',
     'common.loading': 'Loading…',
     'common.required': 'required',
+    'common.imageUploadFailed':
+      'The image could not be uploaded (Cloud Storage requires the Blaze plan). The trip was saved without an image.',
 
     'nav.myTrips': 'My trips',
     'nav.sharedTrips': 'Shared',
