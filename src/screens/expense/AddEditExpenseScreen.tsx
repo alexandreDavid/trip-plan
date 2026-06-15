@@ -52,7 +52,7 @@ export function AddEditExpenseScreen({ route, navigation }: Props) {
     navigation.setOptions({
       headerRight: () =>
         expenseId ? (
-          <Pressable onPress={handleDelete} hitSlop={8}>
+          <Pressable onPress={handleDelete} hitSlop={8} style={{ marginRight: spacing.md }}>
             <Ionicons name="trash-outline" size={22} color={colors.danger} />
           </Pressable>
         ) : null,

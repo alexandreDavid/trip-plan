@@ -42,7 +42,11 @@ export function ExpensesScreen({ route, navigation }: Props) {
     navigation.setOptions({
       title: t('nav.expenses'),
       headerRight: () => (
-        <Pressable onPress={() => navigation.navigate('Participants', { tripId })} hitSlop={8}>
+        <Pressable
+          onPress={() => navigation.navigate('Participants', { tripId })}
+          hitSlop={8}
+          style={{ marginRight: spacing.md }}
+        >
           <Ionicons name="people-outline" size={22} color={colors.primary} />
         </Pressable>
       ),

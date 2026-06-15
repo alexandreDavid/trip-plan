@@ -213,7 +213,7 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   dates: { fontSize: fontSize.sm, color: colors.textMuted, marginTop: spacing.xs },
   daySelectorWrap: { backgroundColor: colors.background, borderBottomWidth: 1, borderBottomColor: colors.border },
   eventsList: { padding: spacing.md },
-  headerActions: { flexDirection: 'row', alignItems: 'center' },
+  headerActions: { flexDirection: 'row', alignItems: 'center', marginRight: spacing.md },
   fab: {
     position: 'absolute',
     right: spacing.lg,
