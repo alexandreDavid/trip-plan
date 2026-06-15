@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Trip, Day } from '@/types';
+import { Trip, Day, EffectiveRole } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { subscribeToTrip, subscribeToDays } from '@/services/tripService';
+import { getTripRole, canEditTrip, canViewTrip, isTripOwner } from '@/utils/permissions';
 
 interface TripState {
   trip: Trip | null;
   days: Day[];
   loading: boolean;
   error: Error | null;
+  role: EffectiveRole;
   isOwner: boolean;
+  canEdit: boolean;
   canView: boolean;
 }
 
@@ -43,8 +46,10 @@ export function useTrip(tripId: string | undefined): TripState {
     };
   }, [tripId]);
 
-  const isOwner = !!(user && trip && trip.ownerId === user.uid);
-  const canView = !!(user && trip && (trip.ownerId === user.uid || trip.sharedWith.includes(user.uid)));
+  const role = getTripRole(trip, user?.uid);
+  const isOwner = isTripOwner(trip, user?.uid);
+  const canEdit = canEditTrip(trip, user?.uid);
+  const canView = canViewTrip(trip, user?.uid);
 
-  return { trip, days, loading, error, isOwner, canView };
+  return { trip, days, loading, error, role, isOwner, canEdit, canView };
 }

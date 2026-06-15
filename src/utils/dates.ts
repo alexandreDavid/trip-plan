@@ -35,3 +35,9 @@ export function toDate(ts: Timestamp | Date | undefined): Date | undefined {
   if (!ts) return undefined;
   return ts instanceof Timestamp ? ts.toDate() : ts;
 }
+
+// Cle de jour normalisee (date civile locale) pour comparer/mapper des jours
+// independamment de l'heure. Ex: '2026-06-15'.
+export function dayKey(date: Date | Timestamp): string {
+  return formatDate(date, 'yyyy-MM-dd');
+}

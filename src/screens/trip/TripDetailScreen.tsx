@@ -29,7 +29,7 @@ const EVENT_TYPES: EventType[] = [
 
 export function TripDetailScreen({ route, navigation }: Props) {
   const { tripId } = route.params;
-  const { trip, days, loading, isOwner } = useTrip(tripId);
+  const { trip, days, loading, isOwner, canEdit } = useTrip(tripId);
   const [selectedDayId, setSelectedDayId] = useState<string | undefined>();
   const { events } = useEvents(tripId, selectedDayId);
   const budget = useTripBudget(tripId);
@@ -119,7 +119,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
               <EmptyState
                 icon="calendar-outline"
                 title="Aucun evenement"
-                subtitle={isOwner ? 'Ajoutez votre premier evenement' : undefined}
+                subtitle={canEdit ? 'Ajoutez votre premier evenement' : undefined}
               />
             </View>
           ) : (
@@ -130,10 +130,10 @@ export function TripDetailScreen({ route, navigation }: Props) {
               renderItem={({ item }) => (
                 <EventCard
                   event={item}
-                  editable={isOwner}
+                  editable={canEdit}
                   onDelete={() => handleDeleteEvent(item.id)}
                   onPress={
-                    isOwner
+                    canEdit
                       ? () =>
                           navigation.navigate('AddEditEvent', {
                             tripId,
@@ -150,7 +150,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
         </View>
       </ScrollView>
 
-      {isOwner && selectedDayId && (
+      {canEdit && selectedDayId && (
         <>
           {pickerOpen && (
             <View style={styles.pickerBackdrop}>

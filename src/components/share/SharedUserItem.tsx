@@ -1,15 +1,18 @@
 import React from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { UserProfile } from '@/types';
+import { UserProfile, TripRole } from '@/types';
 import { colors, spacing, radius, fontSize } from '@/theme';
+import { roleLabel } from '@/utils/permissions';
 
 interface Props {
   user: UserProfile;
+  role?: TripRole;
+  onToggleRole?: () => void;
   onRemove?: () => void;
 }
 
-export function SharedUserItem({ user, onRemove }: Props) {
+export function SharedUserItem({ user, role, onToggleRole, onRemove }: Props) {
   return (
     <View style={styles.row}>
       {user.photoURL ? (
@@ -23,6 +26,22 @@ export function SharedUserItem({ user, onRemove }: Props) {
         <Text style={styles.name}>{user.displayName}</Text>
         <Text style={styles.email}>{user.email}</Text>
       </View>
+      {role && onToggleRole && (
+        <Pressable
+          onPress={onToggleRole}
+          hitSlop={8}
+          style={[styles.rolePill, role === 'editor' ? styles.rolePillEditor : styles.rolePillViewer]}
+        >
+          <Ionicons
+            name={role === 'editor' ? 'create-outline' : 'eye-outline'}
+            size={14}
+            color={role === 'editor' ? colors.primary : colors.textMuted}
+          />
+          <Text style={[styles.roleText, role === 'editor' && styles.roleTextEditor]}>
+            {roleLabel(role)}
+          </Text>
+        </Pressable>
+      )}
       {onRemove && (
         <Pressable onPress={onRemove} hitSlop={8}>
           <Ionicons name="close-circle" size={24} color={colors.danger} />
@@ -48,4 +67,17 @@ const styles = StyleSheet.create({
   body: { flex: 1 },
   name: { fontSize: fontSize.md, fontWeight: '600', color: colors.text },
   email: { fontSize: fontSize.sm, color: colors.textMuted },
+  rolePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+    borderWidth: 1,
+  },
+  rolePillEditor: { borderColor: colors.primary, backgroundColor: colors.primary + '11' },
+  rolePillViewer: { borderColor: colors.border, backgroundColor: colors.background },
+  roleText: { fontSize: fontSize.xs, color: colors.textMuted, fontWeight: '600' },
+  roleTextEditor: { color: colors.primary },
 });

@@ -1,5 +1,6 @@
 import {
   collection,
+  collectionGroup,
   doc,
   getDoc,
   getDocs,
@@ -8,17 +9,19 @@ import {
   where,
   orderBy,
   writeBatch,
+  WriteBatch,
   serverTimestamp,
   Timestamp,
   arrayUnion,
   arrayRemove,
   updateDoc,
   deleteDoc,
+  deleteField,
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Collections } from '@/config/constants';
-import { Trip, TripInput, Day } from '@/types';
-import { getDaysBetween } from '@/utils/dates';
+import { Trip, TripInput, Day, TripRole } from '@/types';
+import { getDaysBetween, dayKey } from '@/utils/dates';
 
 function tripCol() {
   return collection(db, Collections.TRIPS);
@@ -26,6 +29,21 @@ function tripCol() {
 
 function daysCol(tripId: string) {
   return collection(db, Collections.TRIPS, tripId, Collections.DAYS);
+}
+
+function eventsCol(tripId: string, dayId: string) {
+  return collection(db, Collections.TRIPS, tripId, Collections.DAYS, dayId, Collections.EVENTS);
+}
+
+// Firestore limite un batch a 500 operations. On decoupe pour rester sous la
+// limite (suppressions en cascade, regeneration de jours sur de longs voyages).
+async function commitInChunks(ops: Array<(batch: WriteBatch) => void>): Promise<void> {
+  const CHUNK = 450;
+  for (let i = 0; i < ops.length; i += CHUNK) {
+    const batch = writeBatch(db);
+    for (const op of ops.slice(i, i + CHUNK)) op(batch);
+    await batch.commit();
+  }
 }
 
 export async function createTrip(ownerId: string, input: TripInput): Promise<string> {
@@ -40,6 +58,7 @@ export async function createTrip(ownerId: string, input: TripInput): Promise<str
     coverImageURL: input.coverImageURL ?? null,
     ownerId,
     sharedWith: [],
+    roles: {},
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -152,19 +171,83 @@ export async function updateTrip(
   if (updates.startDate) data.startDate = Timestamp.fromDate(updates.startDate);
   if (updates.endDate) data.endDate = Timestamp.fromDate(updates.endDate);
   await updateDoc(doc(db, Collections.TRIPS, tripId), data);
-  // Note: la regeneration des jours si les dates changent doit ideralement etre
-  // geree par une Cloud Function pour garantir l'atomicite et les permissions.
+
+  // Si les dates changent, on resynchronise les jours cote client (pas de Cloud
+  // Function sur le plan gratuit). Les jours conserves gardent leurs evenements.
+  if (updates.startDate || updates.endDate) {
+    const trip = await getTrip(tripId);
+    if (trip) {
+      const newStart = updates.startDate ?? trip.startDate.toDate();
+      const newEnd = updates.endDate ?? trip.endDate.toDate();
+      await syncTripDays(tripId, newStart, newEnd);
+    }
+  }
+}
+
+// Aligne la sous-collection `days` sur l'intervalle [start, end] :
+// - cree les jours manquants,
+// - supprime les jours hors plage (et leurs evenements en cascade),
+// - reordonne chronologiquement les jours conserves.
+async function syncTripDays(tripId: string, start: Date, end: Date): Promise<void> {
+  const existing = await getDaysOnce(tripId);
+  const existingByKey = new Map(existing.map((d) => [dayKey(d.date.toDate()), d]));
+
+  const targetDates = getDaysBetween(start, end);
+  const targetKeys = new Set(targetDates.map((d) => dayKey(d)));
+
+  const ops: Array<(batch: WriteBatch) => void> = [];
+
+  // Suppression des jours hors plage + leurs evenements.
+  for (const day of existing) {
+    if (targetKeys.has(dayKey(day.date.toDate()))) continue;
+    const eventsSnap = await getDocs(eventsCol(tripId, day.id));
+    eventsSnap.forEach((e) => ops.push((batch) => batch.delete(e.ref)));
+    ops.push((batch) => batch.delete(doc(daysCol(tripId), day.id)));
+  }
+
+  // Creation des jours manquants + reordonnancement chronologique.
+  targetDates.forEach((date, idx) => {
+    const existingDay = existingByKey.get(dayKey(date));
+    if (existingDay) {
+      if (existingDay.order !== idx) {
+        ops.push((batch) => batch.update(doc(daysCol(tripId), existingDay.id), { order: idx }));
+      }
+    } else {
+      const ref = doc(daysCol(tripId));
+      ops.push((batch) =>
+        batch.set(ref, { tripId, date: Timestamp.fromDate(date), order: idx }),
+      );
+    }
+  });
+
+  await commitInChunks(ops);
 }
 
 export async function deleteTrip(tripId: string): Promise<void> {
-  // Supprime le doc trip. La suppression en cascade des sous-collections est faite
-  // par la Cloud Function onTripDelete.
-  await deleteDoc(doc(db, Collections.TRIPS, tripId));
+  // Suppression en cascade cote client (pas de Cloud Function sur le plan
+  // gratuit) : evenements -> jours -> doc trip (le doc trip en dernier pour que
+  // les regles de securite puissent encore le lire pendant les suppressions).
+  const eventsSnap = await getDocs(
+    query(collectionGroup(db, Collections.EVENTS), where('tripId', '==', tripId)),
+  );
+  const daysSnap = await getDocs(daysCol(tripId));
+
+  const ops: Array<(batch: WriteBatch) => void> = [];
+  eventsSnap.forEach((e) => ops.push((batch) => batch.delete(e.ref)));
+  daysSnap.forEach((d) => ops.push((batch) => batch.delete(d.ref)));
+  ops.push((batch) => batch.delete(doc(db, Collections.TRIPS, tripId)));
+
+  await commitInChunks(ops);
 }
 
-export async function shareTripWithUser(tripId: string, targetUserId: string): Promise<void> {
+export async function shareTripWithUser(
+  tripId: string,
+  targetUserId: string,
+  role: TripRole = 'editor',
+): Promise<void> {
   await updateDoc(doc(db, Collections.TRIPS, tripId), {
     sharedWith: arrayUnion(targetUserId),
+    [`roles.${targetUserId}`]: role,
     updatedAt: serverTimestamp(),
   });
 }
@@ -172,6 +255,18 @@ export async function shareTripWithUser(tripId: string, targetUserId: string): P
 export async function unshareTripWithUser(tripId: string, targetUserId: string): Promise<void> {
   await updateDoc(doc(db, Collections.TRIPS, tripId), {
     sharedWith: arrayRemove(targetUserId),
+    [`roles.${targetUserId}`]: deleteField(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function updateTripMemberRole(
+  tripId: string,
+  targetUserId: string,
+  role: TripRole,
+): Promise<void> {
+  await updateDoc(doc(db, Collections.TRIPS, tripId), {
+    [`roles.${targetUserId}`]: role,
     updatedAt: serverTimestamp(),
   });
 }

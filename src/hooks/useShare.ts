@@ -1,21 +1,27 @@
 import { useEffect, useState, useCallback } from 'react';
-import { UserProfile } from '@/types';
+import { UserProfile, TripRole } from '@/types';
 import { getUsersByIds, getUserByEmail } from '@/services/userService';
 import {
   shareTripWithUser,
   unshareTripWithUser,
+  updateTripMemberRole,
   subscribeToTrip,
 } from '@/services/tripService';
 
+export interface TripMember {
+  user: UserProfile;
+  role: TripRole;
+}
+
 interface ShareState {
-  sharedUsers: UserProfile[];
+  members: TripMember[];
   loading: boolean;
   error: string | null;
 }
 
 export function useShareTrip(tripId: string | undefined) {
   const [state, setState] = useState<ShareState>({
-    sharedUsers: [],
+    members: [],
     loading: true,
     error: null,
   });
@@ -24,24 +30,36 @@ export function useShareTrip(tripId: string | undefined) {
     if (!tripId) return;
     const unsub = subscribeToTrip(tripId, async (trip) => {
       if (!trip) {
-        setState({ sharedUsers: [], loading: false, error: null });
+        setState({ members: [], loading: false, error: null });
         return;
       }
       const users = await getUsersByIds(trip.sharedWith);
-      setState({ sharedUsers: users, loading: false, error: null });
+      const members: TripMember[] = users.map((user) => ({
+        user,
+        role: trip.roles?.[user.uid] ?? 'viewer',
+      }));
+      setState({ members, loading: false, error: null });
     });
     return unsub;
   }, [tripId]);
 
   const shareWithEmail = useCallback(
-    async (email: string): Promise<{ ok: boolean; error?: string }> => {
+    async (email: string, role: TripRole = 'editor'): Promise<{ ok: boolean; error?: string }> => {
       if (!tripId) return { ok: false, error: 'Voyage invalide' };
       const user = await getUserByEmail(email);
       if (!user) {
         return { ok: false, error: 'Aucun utilisateur trouve avec cet email' };
       }
-      await shareTripWithUser(tripId, user.uid);
+      await shareTripWithUser(tripId, user.uid, role);
       return { ok: true };
+    },
+    [tripId],
+  );
+
+  const changeRole = useCallback(
+    async (userId: string, role: TripRole) => {
+      if (!tripId) return;
+      await updateTripMemberRole(tripId, userId, role);
     },
     [tripId],
   );
@@ -54,5 +72,5 @@ export function useShareTrip(tripId: string | undefined) {
     [tripId],
   );
 
-  return { ...state, shareWithEmail, removeShare };
+  return { ...state, shareWithEmail, changeRole, removeShare };
 }

@@ -15,7 +15,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ShareTrip'>;
 
 export function ShareTripScreen({ route }: Props) {
   const { tripId } = route.params;
-  const { sharedUsers, shareWithEmail, removeShare } = useShareTrip(tripId);
+  const { members, shareWithEmail, changeRole, removeShare } = useShareTrip(tripId);
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -52,7 +52,8 @@ export function ShareTripScreen({ route }: Props) {
       <View style={styles.container}>
         <Text style={styles.title}>Inviter par email</Text>
         <Text style={styles.subtitle}>
-          Les personnes invitees pourront consulter le voyage mais pas le modifier.
+          Les personnes invitees peuvent modifier le voyage (editeur) par defaut. Touchez le badge
+          de role pour passer un membre en lecteur.
         </Text>
         <Input
           value={email}
@@ -65,14 +66,21 @@ export function ShareTripScreen({ route }: Props) {
         <Button title="Inviter" onPress={handleInvite} loading={submitting} />
 
         <Text style={[styles.title, { marginTop: spacing.xl }]}>Acces partages</Text>
-        {sharedUsers.length === 0 ? (
+        {members.length === 0 ? (
           <EmptyState icon="people-outline" title="Personne" subtitle="Aucun partage pour le moment" />
         ) : (
           <FlatList
-            data={sharedUsers}
-            keyExtractor={(u) => u.uid}
+            data={members}
+            keyExtractor={(m) => m.user.uid}
             renderItem={({ item }) => (
-              <SharedUserItem user={item} onRemove={() => handleRemove(item.uid, item.displayName)} />
+              <SharedUserItem
+                user={item.user}
+                role={item.role}
+                onToggleRole={() =>
+                  changeRole(item.user.uid, item.role === 'editor' ? 'viewer' : 'editor')
+                }
+                onRemove={() => handleRemove(item.user.uid, item.user.displayName)}
+              />
             )}
           />
         )}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { EventType, TripEvent } from '@/types';
-import { getAllEventsForTrip } from '@/services/eventService';
+import { subscribeToAllEventsForTrip } from '@/services/eventService';
 import { groupBudgetByType, sumBudgets } from '@/utils/budget';
 
 interface BudgetState {
@@ -10,25 +10,25 @@ interface BudgetState {
   loading: boolean;
 }
 
+const emptyByType = (): Record<EventType, number> => ({
+  [EventType.ACCOMMODATION]: 0,
+  [EventType.TRANSPORT]: 0,
+  [EventType.ACTIVITY]: 0,
+  [EventType.RESTAURANT]: 0,
+});
+
 export function useTripBudget(tripId: string | undefined): BudgetState {
   const [state, setState] = useState<BudgetState>({
     total: 0,
     byDay: {},
-    byType: {
-      [EventType.ACCOMMODATION]: 0,
-      [EventType.TRANSPORT]: 0,
-      [EventType.ACTIVITY]: 0,
-      [EventType.RESTAURANT]: 0,
-    },
+    byType: emptyByType(),
     loading: true,
   });
 
   useEffect(() => {
     if (!tripId) return;
-    let cancelled = false;
-    (async () => {
-      const events: TripEvent[] = await getAllEventsForTrip(tripId);
-      if (cancelled) return;
+    setState((s) => ({ ...s, loading: true }));
+    const unsub = subscribeToAllEventsForTrip(tripId, (events: TripEvent[]) => {
       const byDay: Record<string, number> = {};
       for (const e of events) {
         byDay[e.dayId] = (byDay[e.dayId] ?? 0) + (e.budget ?? 0);
@@ -39,10 +39,8 @@ export function useTripBudget(tripId: string | undefined): BudgetState {
         byType: groupBudgetByType(events),
         loading: false,
       });
-    })();
-    return () => {
-      cancelled = true;
-    };
+    });
+    return unsub;
   }, [tripId]);
 
   return state;

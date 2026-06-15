@@ -114,3 +114,25 @@ export async function getAllEventsForTrip(tripId: string): Promise<TripEvent[]> 
     ...(d.data() as object),
   })) as TripEvent[];
 }
+
+// Abonnement temps reel a tous les evenements d'un voyage (budget global qui
+// se met a jour en direct des qu'un evenement change).
+export function subscribeToAllEventsForTrip(
+  tripId: string,
+  callback: (events: TripEvent[]) => void,
+  onError?: (err: Error) => void,
+): () => void {
+  const q = query(collectionGroup(db, Collections.EVENTS), where('tripId', '==', tripId));
+  return onSnapshot(
+    q,
+    (snap) => {
+      callback(
+        snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as object),
+        })) as TripEvent[],
+      );
+    },
+    onError,
+  );
+}

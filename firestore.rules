@@ -21,8 +21,13 @@ service cloud.firestore {
       return isOwner(t.ownerId) || request.auth.uid in t.sharedWith;
     }
 
+    // L'owner peut tout editer ; un collaborateur peut editer le contenu
+    // (jours/evenements) uniquement si son role est 'editor'.
     function canEditTrip(tripId) {
-      return isOwner(getTrip(tripId).ownerId);
+      let t = getTrip(tripId);
+      return isOwner(t.ownerId) ||
+        (request.auth.uid in t.sharedWith &&
+         t.get(['roles', request.auth.uid], 'viewer') == 'editor');
     }
 
     // users/{userId}
