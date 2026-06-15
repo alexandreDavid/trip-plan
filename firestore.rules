@@ -39,6 +39,13 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Lecture collection-group des evenements (timeline + budget global).
+    // Une requete collectionGroup('events') ne peut pas s'appuyer sur le
+    // wildcard de chemin {tripId} : on autorise via le champ tripId du document.
+    match /{path=**}/events/{eventId} {
+      allow read: if isSignedIn() && canViewTrip(resource.data.tripId);
+    }
+
     // trips/{tripId}
     match /trips/{tripId} {
       allow read: if isSignedIn() &&

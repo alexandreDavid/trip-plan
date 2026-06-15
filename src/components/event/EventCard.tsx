@@ -79,12 +79,12 @@ export function EventCard({ event, currency = DEFAULT_CURRENCY, onPress, onDelet
             <Text style={styles.budget}>{formatMoney(event.budget, currency)}</Text>
           )}
         </View>
-        {subtitle && (
+        {subtitle ? (
           <Text style={styles.subtitle} numberOfLines={1}>
             {subtitle}
           </Text>
-        )}
-        {timeLabel && <Text style={styles.time}>{timeLabel}</Text>}
+        ) : null}
+        {timeLabel ? <Text style={styles.time}>{timeLabel}</Text> : null}
       </View>
       {editable && onDelete && (
         <Pressable onPress={onDelete} style={styles.deleteBtn} hitSlop={8}>
