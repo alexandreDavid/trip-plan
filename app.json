@@ -23,14 +23,20 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.tripplan.app"
+      "package": "com.tripplan.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "REMPLACER_PAR_CLE_MAPS_ANDROID"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-image-picker",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-notifications"
     ]
   }
 }

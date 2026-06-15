@@ -93,6 +93,21 @@ export async function deleteEvent(tripId: string, dayId: string, eventId: string
   await deleteDoc(doc(eventsCol(tripId, dayId), eventId));
 }
 
+// Met à jour uniquement les coordonnées (utilisé par le géocodage de la carte).
+export async function updateEventCoords(
+  tripId: string,
+  dayId: string,
+  eventId: string,
+  latitude: number,
+  longitude: number,
+): Promise<void> {
+  await updateDoc(doc(eventsCol(tripId, dayId), eventId), {
+    latitude,
+    longitude,
+    updatedAt: serverTimestamp(),
+  });
+}
+
 export async function reorderEvents(
   tripId: string,
   dayId: string,

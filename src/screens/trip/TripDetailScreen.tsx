@@ -8,6 +8,7 @@ import { useTrip } from '@/hooks/useTrip';
 import { useEvents } from '@/hooks/useEvents';
 import { useTripBudget } from '@/hooks/useBudget';
 import { DaySelector } from '@/components/trip/DaySelector';
+import { TripActionBar } from '@/components/trip/TripActionBar';
 import { EventCard } from '@/components/event/EventCard';
 import { BudgetSummary } from '@/components/budget/BudgetSummary';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
@@ -44,34 +45,24 @@ export function TripDetailScreen({ route, navigation }: Props) {
   useLayoutEffect(() => {
     navigation.setOptions({
       title: trip?.name ?? 'Voyage',
-      headerRight: () => (
-        <View style={styles.headerActions}>
-          <Pressable onPress={() => navigation.navigate('Expenses', { tripId })} hitSlop={8}>
-            <Ionicons name="wallet-outline" size={22} color={colors.primary} />
-          </Pressable>
-          {isOwner && (
-            <>
-              <Pressable
-                onPress={() => navigation.navigate('ShareTrip', { tripId })}
-                hitSlop={8}
-                style={{ marginLeft: spacing.md }}
-              >
-                <Ionicons name="share-outline" size={22} color={colors.primary} />
-              </Pressable>
-              <Pressable
-                onPress={() => navigation.navigate('AddEditTrip', { tripId })}
-                hitSlop={8}
-                style={{ marginLeft: spacing.md }}
-              >
-                <Ionicons name="create-outline" size={22} color={colors.primary} />
-              </Pressable>
-              <Pressable onPress={handleDelete} hitSlop={8} style={{ marginLeft: spacing.md }}>
-                <Ionicons name="trash-outline" size={22} color={colors.danger} />
-              </Pressable>
-            </>
-          )}
-        </View>
-      ),
+      headerRight: () =>
+        isOwner ? (
+          <View style={styles.headerActions}>
+            <Pressable onPress={() => navigation.navigate('ShareTrip', { tripId })} hitSlop={8}>
+              <Ionicons name="share-outline" size={22} color={colors.primary} />
+            </Pressable>
+            <Pressable
+              onPress={() => navigation.navigate('AddEditTrip', { tripId })}
+              hitSlop={8}
+              style={{ marginLeft: spacing.md }}
+            >
+              <Ionicons name="create-outline" size={22} color={colors.primary} />
+            </Pressable>
+            <Pressable onPress={handleDelete} hitSlop={8} style={{ marginLeft: spacing.md }}>
+              <Ionicons name="trash-outline" size={22} color={colors.danger} />
+            </Pressable>
+          </View>
+        ) : null,
     });
   }, [navigation, trip, isOwner, tripId]);
 
@@ -116,6 +107,14 @@ export function TripDetailScreen({ route, navigation }: Props) {
             <Text style={styles.destination}>{trip.destination}</Text>
             <Text style={styles.dates}>{formatDateRange(trip.startDate, trip.endDate)}</Text>
           </View>
+          <TripActionBar
+            actions={[
+              { icon: 'time-outline', label: 'Timeline', onPress: () => navigation.navigate('Timeline', { tripId }) },
+              { icon: 'wallet-outline', label: 'Dépenses', onPress: () => navigation.navigate('Expenses', { tripId }) },
+              { icon: 'notifications-outline', label: 'Rappels', onPress: () => navigation.navigate('Reminders', { tripId }) },
+              { icon: 'map-outline', label: 'Carte', onPress: () => navigation.navigate('Map', { tripId }) },
+            ]}
+          />
           <BudgetSummary total={budget.total} byType={budget.byType} />
         </View>
 

@@ -16,6 +16,8 @@ interface BaseEvent {
   name: string;
   notes?: string;
   budget?: number;
+  latitude?: number;
+  longitude?: number;
   order: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;

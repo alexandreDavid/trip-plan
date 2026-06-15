@@ -11,6 +11,9 @@ import { ShareTripScreen } from '@/screens/trip/ShareTripScreen';
 import { ExpensesScreen } from '@/screens/expense/ExpensesScreen';
 import { AddEditExpenseScreen } from '@/screens/expense/AddEditExpenseScreen';
 import { ParticipantsScreen } from '@/screens/expense/ParticipantsScreen';
+import { TimelineScreen } from '@/screens/trip/TimelineScreen';
+import { RemindersScreen } from '@/screens/trip/RemindersScreen';
+import { MapScreen } from '@/screens/trip/MapScreen';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { colors } from '@/theme';
 
@@ -53,6 +56,9 @@ export function RootNavigator() {
         component={ShareTripScreen}
         options={{ title: 'Partager', presentation: 'modal' }}
       />
+      <Stack.Screen name="Timeline" component={TimelineScreen} options={{ title: 'Timeline' }} />
+      <Stack.Screen name="Reminders" component={RemindersScreen} options={{ title: 'Rappels' }} />
+      <Stack.Screen name="Map" component={MapScreen} options={{ title: 'Carte' }} />
       <Stack.Screen name="Expenses" component={ExpensesScreen} options={{ title: 'Dépenses' }} />
       <Stack.Screen
         name="AddEditExpense"
