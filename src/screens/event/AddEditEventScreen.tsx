@@ -1,0 +1,84 @@
+import React, { useEffect, useState } from 'react';
+import { Alert, ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList, EventType, TripEvent, EventInput } from '@/types';
+import { EventForm } from '@/components/event/EventForm';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import {
+  createEvent,
+  subscribeToEventsForDay,
+  updateEvent,
+} from '@/services/eventService';
+import { getDaysOnce } from '@/services/tripService';
+import { colors, spacing } from '@/theme';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'AddEditEvent'>;
+
+export function AddEditEventScreen({ route, navigation }: Props) {
+  const { tripId, dayId, eventId, eventType } = route.params;
+  const [initialEvent, setInitialEvent] = useState<TripEvent | undefined>();
+  const [dayDate, setDayDate] = useState<Date | undefined>();
+  const [existingCount, setExistingCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  const resolvedType: EventType | undefined = initialEvent?.type ?? eventType;
+
+  useEffect(() => {
+    (async () => {
+      const days = await getDaysOnce(tripId);
+      const day = days.find((d) => d.id === dayId);
+      setDayDate(day?.date.toDate());
+    })();
+  }, [tripId, dayId]);
+
+  useEffect(() => {
+    const unsub = subscribeToEventsForDay(tripId, dayId, (events) => {
+      setExistingCount(events.length);
+      if (eventId) {
+        const e = events.find((ev) => ev.id === eventId);
+        if (e) setInitialEvent(e);
+      }
+      setLoading(false);
+    });
+    return unsub;
+  }, [tripId, dayId, eventId]);
+
+  if (loading || !dayDate || !resolvedType) return <LoadingScreen />;
+
+  const handleSubmit = async (input: EventInput) => {
+    setSubmitting(true);
+    try {
+      if (eventId) {
+        await updateEvent(tripId, dayId, eventId, input);
+      } else {
+        await createEvent(tripId, dayId, input, existingCount);
+      }
+      navigation.goBack();
+    } catch (err) {
+      Alert.alert('Erreur', (err as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <EventForm
+          type={resolvedType}
+          initialEvent={initialEvent}
+          dayDate={dayDate}
+          submitting={submitting}
+          onSubmit={handleSubmit}
+        />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  container: { padding: spacing.md },
+});

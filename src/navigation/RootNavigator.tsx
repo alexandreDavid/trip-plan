@@ -1,0 +1,55 @@
+import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { AuthStack } from './AuthStack';
+import { MainTabs } from './MainTabs';
+import { TripDetailScreen } from '@/screens/trip/TripDetailScreen';
+import { AddEditTripScreen } from '@/screens/trip/AddEditTripScreen';
+import { AddEditEventScreen } from '@/screens/event/AddEditEventScreen';
+import { ShareTripScreen } from '@/screens/trip/ShareTripScreen';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { colors } from '@/theme';
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export function RootNavigator() {
+  const { user, initialized } = useAuth();
+
+  if (!initialized) return <LoadingScreen />;
+  if (!user) return <AuthStack />;
+
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.surface },
+        headerTitleStyle: { color: colors.text },
+        headerTintColor: colors.primary,
+      }}
+    >
+      <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+      <Stack.Screen name="TripDetail" component={TripDetailScreen} options={{ title: 'Voyage' }} />
+      <Stack.Screen
+        name="AddEditTrip"
+        component={AddEditTripScreen}
+        options={({ route }) => ({
+          title: route.params?.tripId ? 'Modifier le voyage' : 'Nouveau voyage',
+          presentation: 'modal',
+        })}
+      />
+      <Stack.Screen
+        name="AddEditEvent"
+        component={AddEditEventScreen}
+        options={({ route }) => ({
+          title: route.params?.eventId ? 'Modifier l\'evenement' : 'Nouvel evenement',
+          presentation: 'modal',
+        })}
+      />
+      <Stack.Screen
+        name="ShareTrip"
+        component={ShareTripScreen}
+        options={{ title: 'Partager', presentation: 'modal' }}
+      />
+    </Stack.Navigator>
+  );
+}

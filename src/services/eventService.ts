@@ -1,0 +1,116 @@
+import {
+  collection,
+  doc,
+  onSnapshot,
+  query,
+  orderBy,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  Timestamp,
+  writeBatch,
+  collectionGroup,
+  where,
+  getDocs,
+} from 'firebase/firestore';
+import { db } from '@/config/firebase';
+import { Collections } from '@/config/constants';
+import { TripEvent, EventInput } from '@/types';
+
+function eventsCol(tripId: string, dayId: string) {
+  return collection(db, Collections.TRIPS, tripId, Collections.DAYS, dayId, Collections.EVENTS);
+}
+
+// Convertit les champs Date en Timestamp Firestore (recursivement sur les champs connus).
+function serializeEventInput(input: EventInput): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(input)) {
+    if (value instanceof Date) {
+      out[key] = Timestamp.fromDate(value);
+    } else if (value === undefined) {
+      // ignore - Firestore refuse undefined
+    } else {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
+export function subscribeToEventsForDay(
+  tripId: string,
+  dayId: string,
+  callback: (events: TripEvent[]) => void,
+  onError?: (err: Error) => void,
+): () => void {
+  const q = query(eventsCol(tripId, dayId), orderBy('order', 'asc'));
+  return onSnapshot(
+    q,
+    (snap) => {
+      callback(
+        snap.docs.map((d) => ({
+          id: d.id,
+          tripId,
+          dayId,
+          ...(d.data() as object),
+        })) as TripEvent[],
+      );
+    },
+    onError,
+  );
+}
+
+export async function createEvent(
+  tripId: string,
+  dayId: string,
+  input: EventInput,
+  order: number,
+): Promise<string> {
+  const ref = await addDoc(eventsCol(tripId, dayId), {
+    ...serializeEventInput(input),
+    tripId,
+    dayId,
+    order,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function updateEvent(
+  tripId: string,
+  dayId: string,
+  eventId: string,
+  input: EventInput,
+): Promise<void> {
+  await updateDoc(doc(eventsCol(tripId, dayId), eventId), {
+    ...serializeEventInput(input),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteEvent(tripId: string, dayId: string, eventId: string): Promise<void> {
+  await deleteDoc(doc(eventsCol(tripId, dayId), eventId));
+}
+
+export async function reorderEvents(
+  tripId: string,
+  dayId: string,
+  orderedEventIds: string[],
+): Promise<void> {
+  const batch = writeBatch(db);
+  orderedEventIds.forEach((id, idx) => {
+    batch.update(doc(eventsCol(tripId, dayId), id), { order: idx });
+  });
+  await batch.commit();
+}
+
+// Recupere tous les evenements d'un voyage (pour le budget global).
+export async function getAllEventsForTrip(tripId: string): Promise<TripEvent[]> {
+  const q = query(collectionGroup(db, Collections.EVENTS), where('tripId', '==', tripId));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({
+    id: d.id,
+    ...(d.data() as object),
+  })) as TripEvent[];
+}

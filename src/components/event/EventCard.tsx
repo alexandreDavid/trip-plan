@@ -1,0 +1,110 @@
+import React from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { EventType, TripEvent } from '@/types';
+import { colors, radius, spacing, fontSize } from '@/theme';
+import { formatTime } from '@/utils/dates';
+import { formatBudget } from '@/utils/budget';
+import { eventMeta } from './eventMeta';
+
+interface Props {
+  event: TripEvent;
+  onPress?: () => void;
+  onDelete?: () => void;
+  editable?: boolean;
+}
+
+function getTimeLabel(event: TripEvent): string | null {
+  switch (event.type) {
+    case EventType.ACCOMMODATION:
+      return event.checkInTime ? `Check-in ${formatTime(event.checkInTime)}` : null;
+    case EventType.TRANSPORT:
+      if (event.departureTime && event.arrivalTime)
+        return `${formatTime(event.departureTime)} -> ${formatTime(event.arrivalTime)}`;
+      if (event.departureTime) return `Depart ${formatTime(event.departureTime)}`;
+      return null;
+    case EventType.ACTIVITY:
+      if (event.startTime && event.endTime)
+        return `${formatTime(event.startTime)} - ${formatTime(event.endTime)}`;
+      if (event.startTime) return formatTime(event.startTime);
+      return null;
+    case EventType.RESTAURANT:
+      return event.time ? formatTime(event.time) : null;
+  }
+}
+
+function getSubtitle(event: TripEvent): string | null {
+  switch (event.type) {
+    case EventType.ACCOMMODATION:
+      return event.address;
+    case EventType.TRANSPORT:
+      return `${event.departureLocation} -> ${event.arrivalLocation}`;
+    case EventType.ACTIVITY:
+      return event.location ?? null;
+    case EventType.RESTAURANT:
+      return event.address ?? null;
+  }
+}
+
+export function EventCard({ event, onPress, onDelete, editable }: Props) {
+  const meta = eventMeta[event.type];
+  const timeLabel = getTimeLabel(event);
+  const subtitle = getSubtitle(event);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+    >
+      <View style={[styles.iconWrap, { backgroundColor: meta.color + '22' }]}>
+        <Ionicons name={meta.icon} size={22} color={meta.color} />
+      </View>
+      <View style={styles.body}>
+        <View style={styles.row}>
+          <Text style={styles.name} numberOfLines={1}>
+            {event.name}
+          </Text>
+          {event.budget != null && <Text style={styles.budget}>{formatBudget(event.budget)}</Text>}
+        </View>
+        {subtitle && (
+          <Text style={styles.subtitle} numberOfLines={1}>
+            {subtitle}
+          </Text>
+        )}
+        {timeLabel && <Text style={styles.time}>{timeLabel}</Text>}
+      </View>
+      {editable && onDelete && (
+        <Pressable onPress={onDelete} style={styles.deleteBtn} hitSlop={8}>
+          <Ionicons name="trash-outline" size={20} color={colors.danger} />
+        </Pressable>
+      )}
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    gap: spacing.md,
+  },
+  pressed: { opacity: 0.85 },
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  body: { flex: 1 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  name: { flex: 1, fontSize: fontSize.md, fontWeight: '600', color: colors.text },
+  budget: { fontSize: fontSize.sm, color: colors.primary, fontWeight: '600', marginLeft: spacing.sm },
+  subtitle: { fontSize: fontSize.sm, color: colors.textMuted, marginTop: 2 },
+  time: { fontSize: fontSize.xs, color: colors.text, marginTop: 2, fontWeight: '500' },
+  deleteBtn: { padding: spacing.xs },
+});

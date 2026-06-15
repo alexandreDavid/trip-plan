@@ -1,0 +1,25 @@
+import { EventType } from './event';
+
+export type AuthStackParamList = {
+  Login: undefined;
+  Register: undefined;
+};
+
+export type MainTabParamList = {
+  MyTrips: undefined;
+  SharedTrips: undefined;
+  Profile: undefined;
+};
+
+export type RootStackParamList = {
+  MainTabs: undefined;
+  TripDetail: { tripId: string };
+  AddEditTrip: { tripId?: string };
+  AddEditEvent: {
+    tripId: string;
+    dayId: string;
+    eventId?: string;
+    eventType?: EventType;
+  };
+  ShareTrip: { tripId: string };
+};
