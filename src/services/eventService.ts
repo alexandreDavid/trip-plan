@@ -10,9 +10,6 @@ import {
   serverTimestamp,
   Timestamp,
   writeBatch,
-  collectionGroup,
-  where,
-  getDocs,
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Collections } from '@/config/constants';
@@ -120,34 +117,63 @@ export async function reorderEvents(
   await batch.commit();
 }
 
-// Recupere tous les evenements d'un voyage (pour le budget global).
-export async function getAllEventsForTrip(tripId: string): Promise<TripEvent[]> {
-  const q = query(collectionGroup(db, Collections.EVENTS), where('tripId', '==', tripId));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({
-    id: d.id,
-    ...(d.data() as object),
-  })) as TripEvent[];
-}
-
-// Abonnement temps reel a tous les evenements d'un voyage (budget global qui
-// se met a jour en direct des qu'un evenement change).
+// Abonnement temps reel a tous les evenements d'un voyage (timeline + budget),
+// agrege jour par jour. On lit les sous-collections par jour (autorisees par les
+// regles existantes : tripId concret dans le chemin) plutot qu'une requete
+// collectionGroup, qui n'est pas simplement autorisable cote regles (la condition
+// canViewTrip s'appuie sur un get() du trip parent que Firestore ne relie pas au
+// filtre where('tripId') d'une requete collection-group).
 export function subscribeToAllEventsForTrip(
   tripId: string,
   callback: (events: TripEvent[]) => void,
   onError?: (err: Error) => void,
 ): () => void {
-  const q = query(collectionGroup(db, Collections.EVENTS), where('tripId', '==', tripId));
-  return onSnapshot(
-    q,
-    (snap) => {
-      callback(
-        snap.docs.map((d) => ({
-          id: d.id,
-          ...(d.data() as object),
-        })) as TripEvent[],
-      );
+  const daysRef = collection(db, Collections.TRIPS, tripId, Collections.DAYS);
+  const dayUnsubs = new Map<string, () => void>();
+  const eventsByDay = new Map<string, TripEvent[]>();
+  const emit = () => callback(Array.from(eventsByDay.values()).flat());
+
+  const daysUnsub = onSnapshot(
+    daysRef,
+    (daysSnap) => {
+      const currentIds = new Set(daysSnap.docs.map((d) => d.id));
+      // Retire les jours supprimes.
+      for (const [dayId, unsub] of Array.from(dayUnsubs.entries())) {
+        if (!currentIds.has(dayId)) {
+          unsub();
+          dayUnsubs.delete(dayId);
+          eventsByDay.delete(dayId);
+        }
+      }
+      // Abonne les nouveaux jours.
+      for (const dayDoc of daysSnap.docs) {
+        if (dayUnsubs.has(dayDoc.id)) continue;
+        const dayId = dayDoc.id;
+        const unsub = onSnapshot(
+          eventsCol(tripId, dayId),
+          (evSnap) => {
+            eventsByDay.set(
+              dayId,
+              evSnap.docs.map((e) => ({
+                id: e.id,
+                tripId,
+                dayId,
+                ...(e.data() as object),
+              })) as TripEvent[],
+            );
+            emit();
+          },
+          onError,
+        );
+        dayUnsubs.set(dayId, unsub);
+      }
+      emit();
     },
     onError,
   );
+
+  return () => {
+    daysUnsub();
+    for (const unsub of dayUnsubs.values()) unsub();
+  };
 }

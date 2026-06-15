@@ -1,6 +1,5 @@
 import {
   collection,
-  collectionGroup,
   doc,
   getDoc,
   getDocs,
@@ -245,9 +244,8 @@ export async function deleteTrip(tripId: string): Promise<void> {
   // Suppression en cascade cote client (pas de Cloud Function sur le plan
   // gratuit) : evenements -> jours -> doc trip (le doc trip en dernier pour que
   // les regles de securite puissent encore le lire pendant les suppressions).
-  const eventsSnap = await getDocs(
-    query(collectionGroup(db, Collections.EVENTS), where('tripId', '==', tripId)),
-  );
+  // On enumere les evenements par jour (pas de collectionGroup, non autorisable
+  // simplement cote regles pour une requete).
   const daysSnap = await getDocs(daysCol(tripId));
   const participantsSnap = await getDocs(
     collection(db, Collections.TRIPS, tripId, Collections.PARTICIPANTS),
@@ -257,7 +255,10 @@ export async function deleteTrip(tripId: string): Promise<void> {
   );
 
   const ops: Array<(batch: WriteBatch) => void> = [];
-  eventsSnap.forEach((e) => ops.push((batch) => batch.delete(e.ref)));
+  for (const dayDoc of daysSnap.docs) {
+    const eventsSnap = await getDocs(eventsCol(tripId, dayDoc.id));
+    eventsSnap.forEach((e) => ops.push((batch) => batch.delete(e.ref)));
+  }
   daysSnap.forEach((d) => ops.push((batch) => batch.delete(d.ref)));
   participantsSnap.forEach((p) => ops.push((batch) => batch.delete(p.ref)));
   expensesSnap.forEach((x) => ops.push((batch) => batch.delete(x.ref)));
