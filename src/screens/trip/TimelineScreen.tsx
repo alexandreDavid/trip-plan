@@ -20,7 +20,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Timeline'>;
 export function TimelineScreen({ route, navigation }: Props) {
   const { tripId } = route.params;
   const { trip, days, loading: tripLoading, canEdit } = useTrip(tripId);
-  const { events, loading: eventsLoading } = useAllEvents(tripId);
+  const { events, loading: eventsLoading, error } = useAllEvents(tripId);
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const t = useT();
@@ -42,6 +42,16 @@ export function TimelineScreen({ route, navigation }: Props) {
   }, [events]);
 
   if (tripLoading || eventsLoading || !trip) return <LoadingScreen />;
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
+        <View style={styles.emptyWrap}>
+          <EmptyState icon="warning-outline" title={t('common.error')} subtitle={error.message} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (events.length === 0) {
     return (
