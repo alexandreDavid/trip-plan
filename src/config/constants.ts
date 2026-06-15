@@ -21,6 +21,7 @@ export const CURRENCIES = [
   'JPY',
   'CAD',
   'AUD',
+  'BRL',
   'THB',
   'MAD',
   'SEK',
