@@ -9,10 +9,14 @@ export interface GeoCoords {
 
 const PHOTON = 'https://photon.komoot.io/api/';
 
-export async function geocodeAddress(query: string): Promise<GeoCoords | null> {
+// `bias` (coordonnées de la destination) oriente la recherche vers la bonne
+// région sans altérer le texte de l'adresse — bien plus fiable que d'ajouter la
+// destination à la requête (qui brouille les adresses complètes).
+export async function geocodeAddress(query: string, bias?: GeoCoords): Promise<GeoCoords | null> {
   const q = query.trim();
   if (!q) return null;
-  const url = `${PHOTON}?limit=1&q=${encodeURIComponent(q)}`;
+  let url = `${PHOTON}?limit=1&q=${encodeURIComponent(q)}`;
+  if (bias) url += `&lat=${bias.latitude}&lon=${bias.longitude}`;
   try {
     const res = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!res.ok) return null;

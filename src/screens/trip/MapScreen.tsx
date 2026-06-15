@@ -50,10 +50,9 @@ export function MapScreen({ route, navigation }: Props) {
     [events],
   );
 
-  const missing = useMemo(
-    () => events.filter((e) => getEventGeocodeQuery(e) && !getEventCoords(e)),
-    [events],
-  );
+  // Tous les lieux adressables (hébergements/activités/restaurants). On les
+  // (re)localise tous, ce qui permet aussi de corriger un lieu mal placé.
+  const geocodable = useMemo(() => events.filter((e) => getEventGeocodeQuery(e)), [events]);
 
   const initialRegion = useMemo(() => {
     if (markers.length === 0) return undefined;
@@ -76,10 +75,12 @@ export function MapScreen({ route, navigation }: Props) {
     let done = 0;
     let failed = 0;
     try {
-      for (const e of missing) {
+      // Biais de recherche = la destination du voyage géocodée une fois.
+      const center = trip ? await geocodeAddress(trip.destination) : null;
+      for (const e of geocodable) {
         const q = getEventGeocodeQuery(e);
         if (!q) continue;
-        let coords = await geocodeAddress(trip ? `${q}, ${trip.destination}` : q);
+        let coords = await geocodeAddress(q, center ?? undefined);
         if (!coords) coords = await geocodeAddress(q);
         if (coords) {
           await updateEventCoords(e.tripId, e.dayId, e.id, coords.latitude, coords.longitude);
@@ -87,7 +88,7 @@ export function MapScreen({ route, navigation }: Props) {
         } else {
           failed += 1;
         }
-        await delay(1100); // respect de la limite de débit Nominatim
+        await delay(400);
       }
       Alert.alert(
         t('tripx.geocodeDoneTitle'),
@@ -132,12 +133,12 @@ export function MapScreen({ route, navigation }: Props) {
             icon="location-outline"
             title={t('tripx.noLocatedPlacesTitle')}
             subtitle={
-              missing.length > 0
-                ? t('tripx.someHaveAddress', { count: missing.length })
+              geocodable.length > 0
+                ? t('tripx.someHaveAddress', { count: geocodable.length })
                 : t('tripx.addAddressHint')
             }
-            actionLabel={canEdit && missing.length > 0 ? t('tripx.locatePlaces') : undefined}
-            onAction={canEdit && missing.length > 0 ? handleGeocode : undefined}
+            actionLabel={canEdit && geocodable.length > 0 ? t('tripx.locatePlaces') : undefined}
+            onAction={canEdit && geocodable.length > 0 ? handleGeocode : undefined}
           />
         </View>
       </SafeAreaView>
@@ -182,11 +183,11 @@ export function MapScreen({ route, navigation }: Props) {
         })}
       </MapView>
 
-      {canEdit && missing.length > 0 && (
+      {canEdit && geocodable.length > 0 && (
         <Pressable style={styles.geocodeBtn} onPress={handleGeocode} disabled={geocoding}>
           <Ionicons name="navigate" size={18} color="#fff" />
           <Text style={styles.geocodeText}>
-            {geocoding ? t('tripx.geocoding') : t('tripx.locateCount', { count: missing.length })}
+            {geocoding ? t('tripx.geocoding') : t('tripx.relocate')}
           </Text>
         </Pressable>
       )}
