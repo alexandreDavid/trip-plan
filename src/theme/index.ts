@@ -1,37 +1,38 @@
-// Couleurs d'accent : identiques en clair et sombre (vives, lisibles sur les deux).
+// Palette "festive" voyage : corail chaleureux + accents tropicaux.
+// Couleurs d'accent identiques en clair et sombre (vives, lisibles sur les deux).
 // Seuls les neutres (fond, surface, texte, bordure) changent selon le thème.
 export const accent = {
-  primary: '#2563EB',
-  primaryDark: '#1D4ED8',
-  secondary: '#64748B',
-  danger: '#DC2626',
-  success: '#16A34A',
+  primary: '#FF5A5F', // corail (vibe voyage)
+  primaryDark: '#E14C50',
+  secondary: '#00A699', // turquoise
+  danger: '#EF4444',
+  success: '#10B981',
   warning: '#F59E0B',
 
   // Couleurs par type d'evenement
-  accommodation: '#16A34A',
-  transport: '#2563EB',
-  activity: '#F59E0B',
-  restaurant: '#DC2626',
+  accommodation: '#06B6D4', // cyan
+  transport: '#6366F1', // indigo
+  activity: '#F59E0B', // ambre
+  restaurant: '#EC4899', // rose
 };
 
 export const lightColors = {
   ...accent,
-  background: '#F8FAFC',
+  background: '#FFF7F3', // blanc cassé chaud
   surface: '#FFFFFF',
-  text: '#0F172A',
-  textMuted: '#64748B',
-  border: '#E2E8F0',
+  text: '#1F2430',
+  textMuted: '#7A7E8A',
+  border: '#F1E7E1',
 };
 
 export const darkColors = {
   ...accent,
-  primary: '#3B82F6',
-  background: '#0B1120',
-  surface: '#1E293B',
-  text: '#F1F5F9',
-  textMuted: '#94A3B8',
-  border: '#334155',
+  primary: '#FF6B70', // corail un peu plus clair sur fond sombre
+  background: '#16131A', // sombre légèrement chaud
+  surface: '#221E29',
+  text: '#F4F1F6',
+  textMuted: '#A39FAD',
+  border: '#3A3442',
 };
 
 export type Palette = typeof lightColors;
@@ -45,9 +46,9 @@ export const spacing = {
 };
 
 export const radius = {
-  sm: 6,
-  md: 12,
-  lg: 20,
+  sm: 8,
+  md: 14,
+  lg: 22,
   full: 999,
 };
 
