@@ -92,6 +92,52 @@ const trip = {
     'trip.role.editor': 'Editor',
     'trip.role.viewer': 'Viewer',
   } as Record<string, string>,
+  pt: {
+    // Detalhe da viagem
+    'trip.actions.timeline': 'Linha do tempo',
+    'trip.actions.expenses': 'Despesas',
+    'trip.actions.reminders': 'Lembretes',
+    'trip.actions.map': 'Mapa',
+    'trip.empty.title': 'Nenhum evento',
+    'trip.empty.subtitle': 'Adicione seu primeiro evento',
+    'trip.eventTypeTitle': 'Tipo de evento',
+    'trip.deleteTripTitle': 'Excluir a viagem?',
+    'trip.deleteTripMsg': 'Esta ação é irreversível.',
+    'trip.deleteEventTitle': 'Excluir este evento?',
+
+    // Edição / criação de viagem
+    'trip.coverAdd': 'Adicionar uma imagem',
+    'trip.name': 'Nome da viagem *',
+    'trip.destination': 'Destino *',
+    'trip.startDate': 'Início (YYYY-MM-DD) *',
+    'trip.endDate': 'Fim (YYYY-MM-DD) *',
+    'trip.currency': 'Moeda',
+    'trip.create': 'Criar viagem',
+
+    // Dias
+    'trip.day': 'Dia {index}',
+
+    // Orçamento
+    'trip.budgetTotal': 'Orçamento total',
+
+    // Compartilhamento
+    'trip.inviteByEmail': 'Convidar por e-mail',
+    'trip.shareExplanation':
+      'As pessoas convidadas podem editar a viagem (editor) por padrão. Toque no selo de função para mudar um membro para visualizador.',
+    'trip.invite': 'Convidar',
+    'trip.sharedAccess': 'Acessos compartilhados',
+    'trip.noOne': 'Ninguém',
+    'trip.noShare': 'Nenhum compartilhamento por enquanto',
+    'trip.invalidEmail': 'E-mail inválido',
+    'trip.unknownError': 'Erro desconhecido',
+    'trip.removeAccessTitle': 'Remover o acesso?',
+    'trip.removeAccessMsg': '{name} não poderá mais ver esta viagem.',
+
+    // Funções
+    'trip.role.owner': 'Organizador',
+    'trip.role.editor': 'Editor',
+    'trip.role.viewer': 'Visualizador',
+  } as Record<string, string>,
 };
 
 export default trip;

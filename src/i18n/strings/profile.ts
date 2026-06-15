@@ -10,6 +10,7 @@ const profile = {
     'profile.theme.system': 'Système',
     'profile.lang.fr': 'Français',
     'profile.lang.en': 'English',
+    'profile.lang.pt': 'Português',
     'profile.lang.system': 'Système',
   },
   en: {
@@ -23,7 +24,22 @@ const profile = {
     'profile.theme.system': 'System',
     'profile.lang.fr': 'Français',
     'profile.lang.en': 'English',
+    'profile.lang.pt': 'Português',
     'profile.lang.system': 'System',
+  },
+  pt: {
+    'profile.title': 'Perfil',
+    'profile.user': 'Usuário',
+    'profile.signOut': 'Sair',
+    'profile.appearance': 'Aparência',
+    'profile.language': 'Idioma',
+    'profile.theme.light': 'Claro',
+    'profile.theme.dark': 'Escuro',
+    'profile.theme.system': 'Sistema',
+    'profile.lang.fr': 'Français',
+    'profile.lang.en': 'English',
+    'profile.lang.pt': 'Português',
+    'profile.lang.system': 'Sistema',
   },
 };
 

@@ -21,6 +21,7 @@ export function ProfileScreen() {
   const langOptions: { value: LanguageMode; label: string }[] = [
     { value: 'fr', label: t('profile.lang.fr') },
     { value: 'en', label: t('profile.lang.en') },
+    { value: 'pt', label: t('profile.lang.pt') },
     { value: 'system', label: t('profile.lang.system') },
   ];
 

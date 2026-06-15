@@ -145,6 +145,78 @@ const expense = {
     'expense.removeConfirmTitle': 'Remove this participant?',
     'expense.removeConfirmBody': '{name} will no longer be part of the split.',
   },
+  pt: {
+    // ExpenseForm — rótulos de campos
+    'expense.labelField': 'Descrição *',
+    'expense.labelPlaceholder': 'Jantar, táxi, museu…',
+    'expense.amount': 'Valor *',
+    'expense.amountPlaceholder': '0',
+    'expense.currency': 'Moeda',
+    'expense.rate': 'Taxa (1 {currency} = ? {base}) *',
+    'expense.category': 'Categoria',
+    'expense.paidByField': 'Pago por *',
+    'expense.split': 'Divisão',
+    'expense.splitEqual': 'Igual',
+    'expense.splitShares': 'Cotas',
+    'expense.splitAmounts': 'Valores',
+    'expense.sharesPlaceholder': 'cotas',
+    'expense.dateField': 'Data *',
+    'expense.datePlaceholder': '2026-06-15',
+    'expense.linkEvent': 'Vincular a um evento (opcional)',
+    'expense.none': 'Nenhum',
+    'expense.perPerson': 'Ou seja, {amount} {currency} por pessoa',
+    'expense.fullyAllocated': 'Totalmente distribuído ({amount} {currency})',
+    'expense.remainingToAllocate': 'Falta distribuir: {amount} {currency}',
+    'expense.addExpense': 'Adicionar despesa',
+
+    // ExpenseForm — erros de validação
+    'expense.errLabelRequired': 'A descrição é obrigatória',
+    'expense.errAmountInvalid': 'Valor inválido',
+    'expense.errRateInvalid': 'Taxa inválida',
+    'expense.errChoosePayer': 'Escolha quem pagou',
+    'expense.errAtLeastOneParticipant': 'Pelo menos um participante',
+    'expense.errAtLeastOneShare': 'Informe pelo menos uma cota',
+    'expense.errAmountsMustEqualTotal': 'A soma dos valores deve ser igual ao total',
+
+    // ExpenseCard
+    'expense.paidBySplit': '{payer} pagou · {count} pessoas',
+
+    // BalancePanel
+    'expense.totalSpent': 'Total gasto',
+    'expense.balances': 'Saldos',
+    'expense.suggestedSettlements': 'Reembolsos sugeridos',
+    'expense.allSettled': 'Tudo equilibrado',
+    'expense.owes': '{from} deve a {to}',
+
+    // ExpensesScreen
+    'expense.startWithParticipants': 'Comece pelos participantes',
+    'expense.startWithParticipantsSubtitle': 'Adicione as pessoas com quem você divide as despesas.',
+    'expense.manageParticipants': 'Gerenciar participantes',
+    'expense.expensesSection': 'Despesas',
+    'expense.noExpenses': 'Nenhuma despesa',
+    'expense.addFirstExpense': 'Adicione sua primeira despesa',
+
+    // AddEditExpenseScreen
+    'expense.deleteConfirmTitle': 'Excluir esta despesa?',
+    'expense.noParticipants': 'Nenhum participante',
+    'expense.noParticipantsSubtitle':
+      'Adicione participantes à viagem primeiro para dividir as despesas.',
+
+    // ParticipantsScreen
+    'expense.addParticipant': 'Adicionar participante',
+    'expense.addParticipantSubtitle': 'Sem precisar de conta: adicione qualquer pessoa pelo nome.',
+    'expense.firstNamePlaceholder': 'Nome',
+    'expense.addSelf': 'Adicionar a mim na divisão',
+    'expense.selfDefaultName': 'Eu',
+    'expense.noParticipantsYet': 'Ninguém',
+    'expense.addFirstParticipant': 'Adicione o primeiro participante',
+    'expense.linkedAccount': 'Conta vinculada',
+    'expense.cannotRemoveTitle': 'Não é possível remover',
+    'expense.cannotRemoveBody':
+      '{name} está vinculado a despesas. Edite ou exclua essas despesas primeiro.',
+    'expense.removeConfirmTitle': 'Remover este participante?',
+    'expense.removeConfirmBody': '{name} não fará mais parte da divisão.',
+  },
 };
 
 export default expense;

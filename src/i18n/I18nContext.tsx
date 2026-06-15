@@ -3,11 +3,11 @@ import * as Localization from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { translations } from './translations';
 
-export type Language = 'fr' | 'en';
+export type Language = 'fr' | 'en' | 'pt';
 export type LanguageMode = Language | 'system';
 
 const STORAGE_KEY = 'i18n.mode';
-const SUPPORTED: Language[] = ['fr', 'en'];
+const SUPPORTED: Language[] = ['fr', 'en', 'pt'];
 
 function deviceLanguage(): Language {
   const code = Localization.getLocales()[0]?.languageCode ?? 'en';
@@ -30,7 +30,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((v) => {
-      if (v === 'fr' || v === 'en' || v === 'system') setModeState(v);
+      if (v === 'fr' || v === 'en' || v === 'pt' || v === 'system') setModeState(v);
     });
   }, []);
 

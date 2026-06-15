@@ -84,6 +84,48 @@ const tripx = {
     'tripx.geocodeDone': '{done} place(s) located.',
     'tripx.geocodeDoneWithFailures': '{done} place(s) located, {failed} not found.',
   },
+  pt: {
+    // Linha do tempo
+    'tripx.emptyItineraryTitle': 'Itinerário vazio',
+    'tripx.emptyItinerarySubtitle': 'Adicione eventos para ver a linha do tempo da viagem.',
+    'tripx.nothingPlanned': 'Nada planejado',
+
+    // Lembretes
+    'tripx.reminderStatusUnavailable': 'Status dos lembretes indisponível',
+    'tripx.scheduledCount': '{count} lembrete(s) agendado(s)',
+    'tripx.upcomingWithTime': '{count} evento(s) futuro(s) com horário podem receber um lembrete.',
+    'tripx.leadByType': 'Antecedência por tipo',
+    'tripx.leadTransport': '3 h antes da partida',
+    'tripx.leadAccommodation': '2 h antes do check-in',
+    'tripx.leadHourBefore': '1 h antes',
+    'tripx.scheduleReminders': 'Agendar os lembretes',
+    'tripx.cancelReminders': 'Cancelar os lembretes',
+    'tripx.remindersFootnote':
+      'Reagende após editar o itinerário para manter os lembretes atualizados. Os lembretes são locais neste dispositivo.',
+    'tripx.permissionDeniedTitle': 'Permissão negada',
+    'tripx.permissionDeniedMessage':
+      'Permita as notificações nas configurações para receber os lembretes.',
+    'tripx.remindersScheduledTitle': 'Lembretes agendados',
+    'tripx.remindersScheduledMessage': '{count} lembrete(s) agendado(s) para esta viagem.',
+    'tripx.unavailableTitle': 'Indisponível',
+    'tripx.remindersUnavailableMessage':
+      '{message}\n\nAs notificações exigem um build de desenvolvimento (não funcionam no Expo Go no SDK 55).',
+
+    // Mapa
+    'tripx.mapUnavailableTitle': 'Mapa indisponível aqui',
+    'tripx.mapUnavailableSubtitle':
+      'O mapa exige um build de desenvolvimento (o react-native-maps não funciona no Expo Go).',
+    'tripx.noLocatedPlacesTitle': 'Nenhum local localizado',
+    'tripx.someHaveAddress':
+      '{count} local(is) têm um endereço. Inicie a localização para colocá-los no mapa.',
+    'tripx.addAddressHint': 'Adicione um endereço às hospedagens, atividades ou restaurantes.',
+    'tripx.locatePlaces': 'Localizar os locais',
+    'tripx.locateCount': 'Localizar {count} local(is)',
+    'tripx.geocoding': 'Localizando…',
+    'tripx.geocodeDoneTitle': 'Localização concluída',
+    'tripx.geocodeDone': '{done} local(is) localizado(s).',
+    'tripx.geocodeDoneWithFailures': '{done} local(is) localizado(s), {failed} não encontrado(s).',
+  },
 };
 
 export default tripx;

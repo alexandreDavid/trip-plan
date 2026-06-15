@@ -11,7 +11,8 @@ import expense from './strings/expense';
 
 const parts = [common, profile, auth, home, trip, tripx, event, expense];
 
-export const translations: Record<'fr' | 'en', Record<string, string>> = {
+export const translations: Record<'fr' | 'en' | 'pt', Record<string, string>> = {
   fr: Object.assign({}, ...parts.map((p) => p.fr)),
   en: Object.assign({}, ...parts.map((p) => p.en)),
+  pt: Object.assign({}, ...parts.map((p) => p.pt)),
 };

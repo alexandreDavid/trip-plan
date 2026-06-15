@@ -84,6 +84,48 @@ const common = {
     'expense.category.shopping': 'Shopping',
     'expense.category.other': 'Other',
   },
+  pt: {
+    'common.cancel': 'Cancelar',
+    'common.delete': 'Excluir',
+    'common.save': 'Salvar',
+    'common.add': 'Adicionar',
+    'common.edit': 'Editar',
+    'common.remove': 'Remover',
+    'common.error': 'Erro',
+    'common.loading': 'Carregando…',
+    'common.required': 'obrigatório',
+    'common.imageUploadFailed':
+      'Não foi possível enviar a imagem (o Cloud Storage requer o plano Blaze). A viagem foi salva sem imagem.',
+
+    'nav.myTrips': 'Minhas viagens',
+    'nav.sharedTrips': 'Compartilhadas',
+    'nav.profile': 'Perfil',
+    'nav.trip': 'Viagem',
+    'nav.newTrip': 'Nova viagem',
+    'nav.editTrip': 'Editar viagem',
+    'nav.newEvent': 'Novo evento',
+    'nav.editEvent': 'Editar evento',
+    'nav.share': 'Compartilhar',
+    'nav.timeline': 'Linha do tempo',
+    'nav.reminders': 'Lembretes',
+    'nav.map': 'Mapa',
+    'nav.expenses': 'Despesas',
+    'nav.newExpense': 'Nova despesa',
+    'nav.editExpense': 'Editar despesa',
+    'nav.participants': 'Participantes',
+
+    'event.type.accommodation': 'Hospedagem',
+    'event.type.transport': 'Transporte',
+    'event.type.activity': 'Atividade',
+    'event.type.restaurant': 'Restaurante',
+
+    'expense.category.accommodation': 'Hospedagem',
+    'expense.category.transport': 'Transporte',
+    'expense.category.food': 'Refeição',
+    'expense.category.activity': 'Atividade',
+    'expense.category.shopping': 'Compras',
+    'expense.category.other': 'Outro',
+  },
 };
 
 export default common;

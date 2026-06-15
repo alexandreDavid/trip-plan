@@ -36,6 +36,24 @@ const auth = {
     'auth.signInError': 'Sign-in error',
     'auth.signUpError': 'Sign-up error',
   } as Record<string, string>,
+  pt: {
+    'auth.signIn': 'Entrar',
+    'auth.signInAction': 'Entrar',
+    'auth.signUpAction': 'Cadastrar',
+    'auth.email': 'E-mail',
+    'auth.password': 'Senha',
+    'auth.confirmPassword': 'Confirmar senha',
+    'auth.name': 'Nome',
+    'auth.createAccount': 'Criar uma conta',
+    'auth.noAccount': 'Não tem conta?',
+    'auth.haveAccount': 'Já tem uma conta?',
+    'auth.invalidEmail': 'E-mail inválido',
+    'auth.passwordMin': 'Pelo menos 6 caracteres',
+    'auth.nameRequired': 'O nome é obrigatório',
+    'auth.passwordsMismatch': 'As senhas não coincidem',
+    'auth.signInError': 'Erro ao entrar',
+    'auth.signUpError': 'Erro ao cadastrar',
+  } as Record<string, string>,
 };
 
 export default auth;

@@ -61,6 +61,36 @@ const event = {
     'event.checkInAt': 'Check-in {time}',
     'event.departAt': 'Departure {time}',
   },
+  pt: {
+    // EventForm — rótulos de campos
+    'event.nameLabel': 'Nome *',
+    'event.address': 'Endereço',
+    'event.checkInLabel': 'Check-in (HH:mm)',
+    'event.checkOutLabel': 'Check-out (HH:mm)',
+    'event.mode': 'Modo',
+    'event.departure': 'Partida',
+    'event.arrival': 'Chegada',
+    'event.departureTime': 'Horário de partida',
+    'event.arrivalTime': 'Horário de chegada',
+    'event.place': 'Local',
+    'event.start': 'Início',
+    'event.end': 'Fim',
+    'event.time': 'Horário',
+    'event.budgetLabel': 'Orçamento',
+    'event.notes': 'Notas',
+
+    // EventForm — modos de transporte
+    'event.transport.flight': 'Avião',
+    'event.transport.train': 'Trem',
+    'event.transport.bus': 'Ônibus',
+    'event.transport.car': 'Carro',
+    'event.transport.ferry': 'Balsa',
+    'event.transport.other': 'Outro',
+
+    // EventCard — rótulos de horário
+    'event.checkInAt': 'Check-in {time}',
+    'event.departAt': 'Partida {time}',
+  },
 };
 
 export default event;

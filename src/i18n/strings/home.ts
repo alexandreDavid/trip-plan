@@ -14,6 +14,13 @@ const home = {
     'home.sharedEmpty.title': 'No shared trips',
     'home.sharedEmpty.subtitle': 'Trips shared with you will appear here',
   } as Record<string, string>,
+  pt: {
+    'home.empty.title': 'Nenhuma viagem',
+    'home.empty.subtitle': 'Comece criando sua primeira viagem',
+    'home.empty.action': 'Criar uma viagem',
+    'home.sharedEmpty.title': 'Nenhuma viagem compartilhada',
+    'home.sharedEmpty.subtitle': 'As viagens compartilhadas com você aparecerão aqui',
+  } as Record<string, string>,
 };
 
 export default home;
