@@ -4,27 +4,13 @@
     "slug": "trip-plan",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "scheme": "tripplan",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tripplan.app"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
       "package": "com.tripplan.app",
       "config": {
         "googleMaps": {
@@ -32,14 +18,12 @@
         }
       }
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
     "plugins": [
       "expo-image-picker",
       "expo-web-browser",
       "expo-notifications",
-      "expo-localization"
+      "expo-localization",
+      "expo-font"
     ]
   }
 }

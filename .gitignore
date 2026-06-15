@@ -2,6 +2,10 @@ node_modules/
 .expo/
 dist/
 npm-debug.*
+
+# Dossiers natifs générés (workflow managé / prebuild)
+/ios/
+/android/
 *.jks
 *.p8
 *.p12
