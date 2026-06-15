@@ -29,6 +29,8 @@ const common = {
     'nav.newExpense': 'Nouvelle dépense',
     'nav.editExpense': 'Modifier la dépense',
     'nav.participants': 'Participants',
+    'nav.expenseParticipants': 'Participants (dépenses)',
+    'nav.join': 'Rejoindre',
 
     'event.type.accommodation': 'Hébergement',
     'event.type.transport': 'Transport',
@@ -71,6 +73,8 @@ const common = {
     'nav.newExpense': 'New expense',
     'nav.editExpense': 'Edit expense',
     'nav.participants': 'Participants',
+    'nav.expenseParticipants': 'Expense participants',
+    'nav.join': 'Join',
 
     'event.type.accommodation': 'Accommodation',
     'event.type.transport': 'Transport',
@@ -113,6 +117,8 @@ const common = {
     'nav.newExpense': 'Nova despesa',
     'nav.editExpense': 'Editar despesa',
     'nav.participants': 'Participantes',
+    'nav.expenseParticipants': 'Participantes (despesas)',
+    'nav.join': 'Entrar',
 
     'event.type.accommodation': 'Hospedagem',
     'event.type.transport': 'Transporte',

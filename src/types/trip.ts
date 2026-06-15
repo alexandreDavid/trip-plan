@@ -19,6 +19,7 @@ export interface Trip {
   sharedWith: string[];
   roles?: Record<string, TripRole>;
   baseCurrency?: string; // devise de référence pour les soldes (défaut EUR)
+  inviteToken?: string | null; // jeton du lien d'invitation (lecteur), null si désactivé
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

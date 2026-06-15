@@ -16,6 +16,7 @@ import { ParticipantsScreen } from '@/screens/expense/ParticipantsScreen';
 import { TimelineScreen } from '@/screens/trip/TimelineScreen';
 import { RemindersScreen } from '@/screens/trip/RemindersScreen';
 import { MapScreen } from '@/screens/trip/MapScreen';
+import { JoinTripScreen } from '@/screens/trip/JoinTripScreen';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -58,7 +59,7 @@ export function RootNavigator() {
       <Stack.Screen
         name="ShareTrip"
         component={ShareTripScreen}
-        options={{ title: t('nav.share'), presentation: 'modal' }}
+        options={{ title: t('nav.participants') }}
       />
       <Stack.Screen name="Timeline" component={TimelineScreen} options={{ title: t('nav.timeline') }} />
       <Stack.Screen name="Reminders" component={RemindersScreen} options={{ title: t('nav.reminders') }} />
@@ -75,7 +76,12 @@ export function RootNavigator() {
       <Stack.Screen
         name="Participants"
         component={ParticipantsScreen}
-        options={{ title: t('nav.participants'), presentation: 'modal' }}
+        options={{ title: t('nav.expenseParticipants'), presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="JoinTrip"
+        component={JoinTripScreen}
+        options={{ title: t('nav.join'), presentation: 'modal' }}
       />
     </Stack.Navigator>
   );

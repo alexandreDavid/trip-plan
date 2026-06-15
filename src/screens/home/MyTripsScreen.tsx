@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import React, { useLayoutEffect, useMemo } from 'react';
+import { FlatList, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { CompositeScreenProps } from '@react-navigation/native';
@@ -24,6 +24,20 @@ export function MyTripsScreen({ navigation }: Props) {
   const t = useT();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { trips, loading } = useMyTrips();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable
+          onPress={() => navigation.navigate('JoinTrip')}
+          hitSlop={8}
+          style={{ marginRight: spacing.md }}
+        >
+          <Ionicons name="enter-outline" size={22} color={colors.primary} />
+        </Pressable>
+      ),
+    });
+  }, [navigation, colors]);
 
   if (loading) return <LoadingScreen />;
 

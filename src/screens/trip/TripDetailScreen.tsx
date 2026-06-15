@@ -54,14 +54,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
       headerRight: () =>
         isOwner ? (
           <View style={styles.headerActions}>
-            <Pressable onPress={() => navigation.navigate('ShareTrip', { tripId })} hitSlop={8}>
-              <Ionicons name="share-outline" size={22} color={colors.primary} />
-            </Pressable>
-            <Pressable
-              onPress={() => navigation.navigate('AddEditTrip', { tripId })}
-              hitSlop={8}
-              style={{ marginLeft: spacing.md }}
-            >
+            <Pressable onPress={() => navigation.navigate('AddEditTrip', { tripId })} hitSlop={8}>
               <Ionicons name="create-outline" size={22} color={colors.primary} />
             </Pressable>
             <Pressable onPress={handleDelete} hitSlop={8} style={{ marginLeft: spacing.md }}>
@@ -119,6 +112,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
               { icon: 'wallet-outline', label: t('trip.actions.expenses'), onPress: () => navigation.navigate('Expenses', { tripId }) },
               { icon: 'notifications-outline', label: t('trip.actions.reminders'), onPress: () => navigation.navigate('Reminders', { tripId }) },
               { icon: 'map-outline', label: t('trip.actions.map'), onPress: () => navigation.navigate('Map', { tripId }) },
+              { icon: 'people-outline', label: t('trip.actions.participants'), onPress: () => navigation.navigate('ShareTrip', { tripId }) },
             ]}
           />
           <BudgetSummary

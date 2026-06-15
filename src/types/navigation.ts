@@ -28,4 +28,5 @@ export type RootStackParamList = {
   Timeline: { tripId: string };
   Reminders: { tripId: string };
   Map: { tripId: string };
+  JoinTrip: { tripId?: string; token?: string } | undefined;
 };

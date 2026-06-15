@@ -22,6 +22,7 @@ import { db } from '@/config/firebase';
 import { Collections, DEFAULT_CURRENCY } from '@/config/constants';
 import { Trip, TripInput, Day, TripRole } from '@/types';
 import { getDaysBetween, dayKey } from '@/utils/dates';
+import { generateInviteToken } from '@/utils/invite';
 
 function tripCol() {
   return collection(db, Collections.TRIPS);
@@ -294,6 +295,42 @@ export async function updateTripMemberRole(
 ): Promise<void> {
   await updateDoc(doc(db, Collections.TRIPS, tripId), {
     [`roles.${targetUserId}`]: role,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+// --- Invitation par lien (l'invité rejoint en tant que lecteur) ---
+
+// Owner : (re)génère le jeton du lien d'invitation et le retourne.
+export async function enableTripInvite(tripId: string): Promise<string> {
+  const token = generateInviteToken();
+  await updateDoc(doc(db, Collections.TRIPS, tripId), {
+    inviteToken: token,
+    updatedAt: serverTimestamp(),
+  });
+  return token;
+}
+
+// Owner : désactive le lien d'invitation.
+export async function disableTripInvite(tripId: string): Promise<void> {
+  await updateDoc(doc(db, Collections.TRIPS, tripId), {
+    inviteToken: null,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+// Invité : s'ajoute lui-même comme lecteur via le jeton du lien. Les règles
+// vérifient que `joinToken` correspond au `inviteToken` stocké (preuve de
+// connaissance du lien). Échoue avec permission-denied si le jeton est invalide.
+export async function joinTripViaInvite(
+  tripId: string,
+  token: string,
+  uid: string,
+): Promise<void> {
+  await updateDoc(doc(db, Collections.TRIPS, tripId), {
+    sharedWith: arrayUnion(uid),
+    [`roles.${uid}`]: 'viewer',
+    joinToken: token,
     updatedAt: serverTimestamp(),
   });
 }

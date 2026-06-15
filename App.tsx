@@ -8,6 +8,16 @@ import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { RootNavigator } from '@/navigation/RootNavigator';
 
+// Liens profonds : tripplan://join/<tripId>/<token> -> écran Rejoindre.
+const linking = {
+  prefixes: ['tripplan://'],
+  config: {
+    screens: {
+      JoinTrip: 'join/:tripId/:token',
+    },
+  },
+};
+
 function ThemedApp() {
   const { scheme, colors } = useTheme();
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
@@ -24,7 +34,7 @@ function ThemedApp() {
   };
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer theme={navTheme} linking={linking}>
       <RootNavigator />
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
     </NavigationContainer>

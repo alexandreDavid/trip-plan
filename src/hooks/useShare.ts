@@ -5,6 +5,8 @@ import {
   shareTripWithUser,
   unshareTripWithUser,
   updateTripMemberRole,
+  enableTripInvite,
+  disableTripInvite,
   subscribeToTrip,
 } from '@/services/tripService';
 
@@ -15,6 +17,7 @@ export interface TripMember {
 
 interface ShareState {
   members: TripMember[];
+  inviteToken: string | null;
   loading: boolean;
   error: string | null;
 }
@@ -22,6 +25,7 @@ interface ShareState {
 export function useShareTrip(tripId: string | undefined) {
   const [state, setState] = useState<ShareState>({
     members: [],
+    inviteToken: null,
     loading: true,
     error: null,
   });
@@ -30,7 +34,7 @@ export function useShareTrip(tripId: string | undefined) {
     if (!tripId) return;
     const unsub = subscribeToTrip(tripId, async (trip) => {
       if (!trip) {
-        setState({ members: [], loading: false, error: null });
+        setState({ members: [], inviteToken: null, loading: false, error: null });
         return;
       }
       const users = await getUsersByIds(trip.sharedWith);
@@ -38,7 +42,7 @@ export function useShareTrip(tripId: string | undefined) {
         user,
         role: trip.roles?.[user.uid] ?? 'viewer',
       }));
-      setState({ members, loading: false, error: null });
+      setState({ members, inviteToken: trip.inviteToken ?? null, loading: false, error: null });
     });
     return unsub;
   }, [tripId]);
@@ -72,5 +76,15 @@ export function useShareTrip(tripId: string | undefined) {
     [tripId],
   );
 
-  return { ...state, shareWithEmail, changeRole, removeShare };
+  const enableInvite = useCallback(async () => {
+    if (!tripId) return;
+    await enableTripInvite(tripId);
+  }, [tripId]);
+
+  const disableInvite = useCallback(async () => {
+    if (!tripId) return;
+    await disableTripInvite(tripId);
+  }, [tripId]);
+
+  return { ...state, shareWithEmail, changeRole, removeShare, enableInvite, disableInvite };
 }

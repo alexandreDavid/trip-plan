@@ -30,6 +30,25 @@ service cloud.firestore {
          t.get(['roles', request.auth.uid], 'viewer') == 'editor');
     }
 
+    // Auto-ajout d'un invité comme LECTEUR via le lien d'invitation.
+    // L'invité prouve qu'il connaît le lien en écrivant joinToken == inviteToken
+    // (il ne peut pas lire le trip avant d'être membre). Il ne peut s'ajouter que
+    // lui-même, sans rien retirer ni changer le proprietaire/le jeton.
+    function isLinkJoin() {
+      let uid = request.auth.uid;
+      let before = resource.data;
+      let after = request.resource.data;
+      return before.get('inviteToken', null) != null
+        && after.get('joinToken', '') == before.inviteToken
+        && !(uid in before.sharedWith)
+        && (uid in after.sharedWith)
+        && after.sharedWith.size() == before.sharedWith.size() + 1
+        && after.sharedWith.hasAll(before.sharedWith)
+        && after.ownerId == before.ownerId
+        && after.get('inviteToken', null) == before.inviteToken
+        && after.get('roles', {}).get(uid, '') == 'viewer';
+    }
+
     // users/{userId}
     match /users/{userId} {
       // Tout utilisateur authentifie peut lire un profil (necessaire pour
@@ -56,9 +75,10 @@ service cloud.firestore {
         request.resource.data.ownerId == request.auth.uid &&
         request.resource.data.sharedWith is list;
 
-      // L'owner peut tout modifier. Les autres : jamais.
-      allow update, delete: if isSignedIn() &&
-        resource.data.ownerId == request.auth.uid;
+      // L'owner peut tout modifier ; un invité peut s'ajouter en lecteur via lien.
+      allow update: if isSignedIn() &&
+        (resource.data.ownerId == request.auth.uid || isLinkJoin());
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
 
       // days/{dayId}
       match /days/{dayId} {
