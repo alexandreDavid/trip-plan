@@ -2,6 +2,7 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer, DefaultTheme, DarkTheme, Theme } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFonts } from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,8 +41,17 @@ function ThemedApp() {
 
   if (!fontsLoaded) return <LoadingScreen />;
 
+  // Web : à chaque changement d'écran, on retire le focus de l'élément actif.
+  // Sinon le bouton qui a déclenché la navigation garde le focus alors que son
+  // écran reçoit aria-hidden (avertissement d'accessibilité dans le navigateur).
+  const handleStateChange = () => {
+    if (Platform.OS !== 'web') return;
+    const doc = (globalThis as { document?: { activeElement?: { blur?: () => void } } }).document;
+    doc?.activeElement?.blur?.();
+  };
+
   return (
-    <NavigationContainer theme={navTheme} linking={linking}>
+    <NavigationContainer theme={navTheme} linking={linking} onStateChange={handleStateChange}>
       <RootNavigator />
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
     </NavigationContainer>
