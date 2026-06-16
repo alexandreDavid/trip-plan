@@ -7,6 +7,8 @@ import {
   User,
   GoogleAuthProvider,
   signInWithCredential,
+  signInWithPopup,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
@@ -48,6 +50,20 @@ export async function signInWithGoogleIdToken(idToken: string): Promise<User> {
   const cred = await signInWithCredential(auth, credential);
   await ensureUserDocument(cred.user);
   return cred.user;
+}
+
+// Connexion Google sur le web (popup). Nécessite le fournisseur Google activé
+// dans la console Firebase. Sur natif, il faut passer par expo-auth-session
+// (signInWithGoogleIdToken) avec des identifiants OAuth.
+export async function signInWithGooglePopup(): Promise<User> {
+  const provider = new GoogleAuthProvider();
+  const cred = await signInWithPopup(auth, provider);
+  await ensureUserDocument(cred.user);
+  return cred.user;
+}
+
+export async function sendPasswordReset(email: string): Promise<void> {
+  await sendPasswordResetEmail(auth, email.trim());
 }
 
 export function signOut(): Promise<void> {

@@ -14,7 +14,7 @@ import { validateEmail, validatePassword } from '@/utils/validation';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export function RegisterScreen({ navigation }: Props) {
-  const { signUp, loading } = useAuth();
+  const { signUp, signInWithGoogle, loading } = useAuth();
   const { colors } = useTheme();
   const t = useT();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -38,6 +38,14 @@ export function RegisterScreen({ navigation }: Props) {
       await signUp(email.trim(), password, displayName.trim());
     } catch (err) {
       Alert.alert(t('auth.signUpError'), (err as Error).message);
+    }
+  };
+
+  const handleGoogle = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      Alert.alert(t('auth.googleError'), (err as Error).message);
     }
   };
 
@@ -74,6 +82,15 @@ export function RegisterScreen({ navigation }: Props) {
             error={errors.confirm}
           />
           <Button title={t('auth.signUpAction')} onPress={handleSubmit} loading={loading} />
+
+          {Platform.OS === 'web' && (
+            <Button
+              title={t('auth.continueWithGoogle')}
+              variant="secondary"
+              onPress={handleGoogle}
+              style={{ marginTop: spacing.md }}
+            />
+          )}
 
           <Pressable onPress={() => navigation.goBack()} style={styles.link}>
             <Text style={styles.linkText}>

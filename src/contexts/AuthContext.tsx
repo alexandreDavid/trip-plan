@@ -8,6 +8,8 @@ interface AuthContextValue {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -44,6 +46,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const signInWithGoogle = useCallback(async () => {
+    setLoading(true);
+    try {
+      await authService.signInWithGooglePopup();
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const resetPassword = useCallback(async (email: string) => {
+    await authService.sendPasswordReset(email);
+  }, []);
+
   const signOut = useCallback(async () => {
     setLoading(true);
     try {
@@ -54,7 +69,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, initialized, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider
+      value={{ user, initialized, loading, signIn, signUp, signInWithGoogle, resetPassword, signOut }}
+    >
       {children}
     </AuthContext.Provider>
   );

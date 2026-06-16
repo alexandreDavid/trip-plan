@@ -14,7 +14,7 @@ import { validateEmail } from '@/utils/validation';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export function LoginScreen({ navigation }: Props) {
-  const { signIn, loading } = useAuth();
+  const { signIn, signInWithGoogle, resetPassword, loading } = useAuth();
   const { colors } = useTheme();
   const t = useT();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -33,6 +33,27 @@ export function LoginScreen({ navigation }: Props) {
       await signIn(email.trim(), password);
     } catch (err) {
       Alert.alert(t('auth.signInError'), (err as Error).message);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!validateEmail(email)) {
+      setErrors({ email: t('auth.resetEmailNeeded') });
+      return;
+    }
+    try {
+      await resetPassword(email.trim());
+      Alert.alert(t('auth.resetSentTitle'), t('auth.resetSentMessage'));
+    } catch (err) {
+      Alert.alert(t('auth.signInError'), (err as Error).message);
+    }
+  };
+
+  const handleGoogle = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      Alert.alert(t('auth.googleError'), (err as Error).message);
     }
   };
 
@@ -63,6 +84,19 @@ export function LoginScreen({ navigation }: Props) {
           />
           <Button title={t('auth.signInAction')} onPress={handleSubmit} loading={loading} />
 
+          <Pressable onPress={handleForgotPassword} style={styles.forgot}>
+            <Text style={styles.linkText}>{t('auth.forgotPassword')}</Text>
+          </Pressable>
+
+          {Platform.OS === 'web' && (
+            <Button
+              title={t('auth.continueWithGoogle')}
+              variant="secondary"
+              onPress={handleGoogle}
+              style={{ marginTop: spacing.md }}
+            />
+          )}
+
           <Pressable onPress={() => navigation.navigate('Register')} style={styles.link}>
             <Text style={styles.linkText}>
               {t('auth.noAccount')} <Text style={styles.linkBold}>{t('auth.signUpAction')}</Text>
@@ -85,6 +119,7 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     marginBottom: spacing.xl,
   },
   link: { marginTop: spacing.lg, alignItems: 'center' },
+  forgot: { marginTop: spacing.md, alignItems: 'center' },
   linkText: { color: colors.textMuted, fontSize: fontSize.sm },
   linkBold: { color: colors.primary, fontWeight: '600' },
 });

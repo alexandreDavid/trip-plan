@@ -17,6 +17,12 @@ const auth = {
     'auth.passwordsMismatch': 'Les mots de passe ne correspondent pas',
     'auth.signInError': 'Erreur de connexion',
     'auth.signUpError': "Erreur d'inscription",
+    'auth.forgotPassword': 'Mot de passe oublié ?',
+    'auth.resetEmailNeeded': 'Entre ton email pour réinitialiser le mot de passe',
+    'auth.resetSentTitle': 'E-mail envoyé',
+    'auth.resetSentMessage': 'Un lien de réinitialisation a été envoyé à ton adresse.',
+    'auth.continueWithGoogle': 'Continuer avec Google',
+    'auth.googleError': 'Erreur de connexion Google',
   } as Record<string, string>,
   en: {
     'auth.signIn': 'Sign in',
@@ -35,6 +41,12 @@ const auth = {
     'auth.passwordsMismatch': 'Passwords do not match',
     'auth.signInError': 'Sign-in error',
     'auth.signUpError': 'Sign-up error',
+    'auth.forgotPassword': 'Forgot password?',
+    'auth.resetEmailNeeded': 'Enter your email to reset your password',
+    'auth.resetSentTitle': 'Email sent',
+    'auth.resetSentMessage': 'A reset link has been sent to your email.',
+    'auth.continueWithGoogle': 'Continue with Google',
+    'auth.googleError': 'Google sign-in error',
   } as Record<string, string>,
   pt: {
     'auth.signIn': 'Entrar',
@@ -53,6 +65,12 @@ const auth = {
     'auth.passwordsMismatch': 'As senhas não coincidem',
     'auth.signInError': 'Erro ao entrar',
     'auth.signUpError': 'Erro ao cadastrar',
+    'auth.forgotPassword': 'Esqueceu a senha?',
+    'auth.resetEmailNeeded': 'Digite seu e-mail para redefinir a senha',
+    'auth.resetSentTitle': 'E-mail enviado',
+    'auth.resetSentMessage': 'Um link de redefinição foi enviado para o seu e-mail.',
+    'auth.continueWithGoogle': 'Continuar com o Google',
+    'auth.googleError': 'Erro ao entrar com o Google',
   } as Record<string, string>,
 };
 
