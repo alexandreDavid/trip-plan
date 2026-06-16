@@ -15,7 +15,7 @@ import { spacing, fontSize, radius, Palette } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
 import { validateTripForm } from '@/utils/validation';
-import { formatDate } from '@/utils/dates';
+import { DateField } from '@/components/ui/DateField';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddEditTrip'>;
 
@@ -31,8 +31,6 @@ export function AddEditTripScreen({ route, navigation }: Props) {
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
-  const [startDateInput, setStartDateInput] = useState('');
-  const [endDateInput, setEndDateInput] = useState('');
   const [baseCurrency, setBaseCurrency] = useState<string>(DEFAULT_CURRENCY);
   const [coverLocalUri, setCoverLocalUri] = useState<string | undefined>();
   const [coverRemoteUrl, setCoverRemoteUrl] = useState<string | undefined>();
@@ -48,28 +46,10 @@ export function AddEditTripScreen({ route, navigation }: Props) {
       setDestination(trip.destination);
       setStartDate(trip.startDate.toDate());
       setEndDate(trip.endDate.toDate());
-      setStartDateInput(formatDate(trip.startDate, 'yyyy-MM-dd'));
-      setEndDateInput(formatDate(trip.endDate, 'yyyy-MM-dd'));
       setBaseCurrency(trip.baseCurrency ?? DEFAULT_CURRENCY);
       setCoverRemoteUrl(trip.coverImageURL);
     })();
   }, [tripId]);
-
-  const parseDate = (s: string): Date | undefined => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return undefined;
-    const d = new Date(s + 'T00:00:00');
-    return isNaN(d.getTime()) ? undefined : d;
-  };
-
-  const handleStartChange = (s: string) => {
-    setStartDateInput(s);
-    setStartDate(parseDate(s));
-  };
-
-  const handleEndChange = (s: string) => {
-    setEndDateInput(s);
-    setEndDate(parseDate(s));
-  };
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -144,20 +124,20 @@ export function AddEditTripScreen({ route, navigation }: Props) {
         />
         <View style={styles.row}>
           <View style={styles.half}>
-            <Input
+            <DateField
               label={t('trip.startDate')}
-              value={startDateInput}
-              onChangeText={handleStartChange}
-              placeholder="2026-06-01"
+              value={startDate}
+              onChange={setStartDate}
+              placeholder={t('trip.datePlaceholder')}
               error={errors.startDate}
             />
           </View>
           <View style={styles.half}>
-            <Input
+            <DateField
               label={t('trip.endDate')}
-              value={endDateInput}
-              onChangeText={handleEndChange}
-              placeholder="2026-06-10"
+              value={endDate}
+              onChange={setEndDate}
+              placeholder={t('trip.datePlaceholder')}
               error={errors.endDate}
             />
           </View>

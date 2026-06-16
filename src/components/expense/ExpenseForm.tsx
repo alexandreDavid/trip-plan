@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { Palette, radius, spacing, fontSize } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
-import { formatDate } from '@/utils/dates';
+import { DateField } from '@/components/ui/DateField';
 import { amountsSplitDiff } from '@/utils/expenses';
 import { expenseCategoryMeta, EXPENSE_CATEGORIES } from './expenseMeta';
 
@@ -30,8 +30,6 @@ interface Props {
 }
 
 const parseNum = (s: string): number => parseFloat(s.replace(',', '.'));
-
-const todayKey = (): string => formatDate(new Date(), 'yyyy-MM-dd');
 
 const SPLIT_MODES: { mode: SplitMode; labelKey: string }[] = [
   { mode: 'equal', labelKey: 'expense.splitEqual' },
@@ -78,8 +76,8 @@ export function ExpenseForm({
     return init;
   });
   const [eventId, setEventId] = useState<string | undefined>(initialExpense?.eventId);
-  const [dateInput, setDateInput] = useState(
-    initialExpense ? formatDate(initialExpense.date, 'yyyy-MM-dd') : todayKey(),
+  const [date, setDate] = useState<Date>(
+    initialExpense ? initialExpense.date.toDate() : new Date(),
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -113,12 +111,6 @@ export function ExpenseForm({
   const setShare = (id: string, value: string) =>
     setShareInputs((prev) => ({ ...prev, [id]: value }));
 
-  const parseDate = (s: string): Date | undefined => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return undefined;
-    const d = new Date(s + 'T00:00:00');
-    return isNaN(d.getTime()) ? undefined : d;
-  };
-
   const buildShares = (): Record<string, number> | undefined => {
     if (splitMode === 'equal') return undefined;
     const out: Record<string, number> = {};
@@ -134,7 +126,6 @@ export function ExpenseForm({
     const errs: Record<string, string> = {};
     const amountNum = parseNum(amount);
     const rateNum = isForeign ? parseNum(rate) : 1;
-    const date = parseDate(dateInput);
     const shares = buildShares();
 
     if (!label.trim()) errs.label = t('expense.errLabelRequired');
@@ -150,7 +141,7 @@ export function ExpenseForm({
     }
 
     setErrors(errs);
-    if (Object.keys(errs).length > 0 || !date) return;
+    if (Object.keys(errs).length > 0) return;
 
     onSubmit({
       label: label.trim(),
@@ -323,10 +314,10 @@ export function ExpenseForm({
         </>
       )}
 
-      <Input
+      <DateField
         label={t('expense.dateField')}
-        value={dateInput}
-        onChangeText={setDateInput}
+        value={date}
+        onChange={setDate}
         placeholder={t('expense.datePlaceholder')}
         error={errors.date}
       />

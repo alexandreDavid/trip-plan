@@ -2,11 +2,12 @@ import React, { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { EventType, EventInput, TransportMode, TripEvent } from '@/types';
 import { Input } from '@/components/ui/Input';
+import { DateField } from '@/components/ui/DateField';
 import { Button } from '@/components/ui/Button';
 import { spacing, fontSize, radius, Palette } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
-import { toDate, formatDate } from '@/utils/dates';
+import { toDate } from '@/utils/dates';
 import { validateEventName } from '@/utils/validation';
 
 interface Props {
@@ -30,13 +31,6 @@ function parseTimeOnDate(time: string | undefined, base: Date): Date | undefined
 function formatTimeField(date: Date | undefined): string {
   if (!date) return '';
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-}
-
-// Parse "YYYY-MM-DD" -> Date (minuit local)
-function parseDateField(s: string): Date | undefined {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s.trim())) return undefined;
-  const d = new Date(s.trim() + 'T00:00:00');
-  return isNaN(d.getTime()) ? undefined : d;
 }
 
 const TRANSPORT_MODES: TransportMode[] = ['flight', 'train', 'bus', 'car', 'ferry', 'other'];
@@ -79,10 +73,10 @@ export function EventForm({ type, initialEvent, dayDate, currency, submitting, o
   );
   // Date de check-out : peut différer du jour de check-in (séjour sur plusieurs
   // jours). Défaut = jour de l'événement (= jour du check-in).
-  const [checkOutDate, setCheckOutDate] = useState(
+  const [checkOutDate, setCheckOutDate] = useState<Date>(
     initialEvent?.type === EventType.ACCOMMODATION && initialEvent.checkOutTime
-      ? formatDate(initialEvent.checkOutTime, 'yyyy-MM-dd')
-      : formatDate(dayDate, 'yyyy-MM-dd'),
+      ? initialEvent.checkOutTime.toDate()
+      : dayDate,
   );
 
   // Transport
@@ -141,7 +135,7 @@ export function EventForm({ type, initialEvent, dayDate, currency, submitting, o
           type: EventType.ACCOMMODATION,
           address: address.trim(),
           checkInTime: parseTimeOnDate(checkInTime, dayDate),
-          checkOutTime: parseTimeOnDate(checkOutTime, parseDateField(checkOutDate) ?? dayDate),
+          checkOutTime: parseTimeOnDate(checkOutTime, checkOutDate),
         };
         break;
       case EventType.TRANSPORT:
@@ -187,12 +181,10 @@ export function EventForm({ type, initialEvent, dayDate, currency, submitting, o
           <Input label={t('event.checkInLabel')} value={checkInTime} onChangeText={setCheckInTime} placeholder="14:00" />
           <View style={styles.row}>
             <View style={styles.half}>
-              <Input
+              <DateField
                 label={t('event.checkOutDate')}
                 value={checkOutDate}
-                onChangeText={setCheckOutDate}
-                placeholder="2026-06-18"
-                autoCapitalize="none"
+                onChange={setCheckOutDate}
               />
             </View>
             <View style={styles.half}>
