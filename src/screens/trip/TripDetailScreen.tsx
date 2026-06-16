@@ -18,7 +18,7 @@ import { deleteTrip } from '@/services/tripService';
 import { spacing, radius, fontSize, Palette } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
-import { formatDateRange } from '@/utils/dates';
+import { formatDateRange, dayKey } from '@/utils/dates';
 import { sortEventsChronologically } from '@/utils/events';
 import { EventTypePicker } from '@/components/event/EventTypePicker';
 
@@ -37,9 +37,11 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
-    if (!selectedDayId && days.length > 0) {
-      setSelectedDayId(days[0].id);
-    }
+    if (selectedDayId || days.length === 0) return;
+    // Sélectionne le jour d'aujourd'hui s'il fait partie du voyage, sinon le 1er.
+    const today = dayKey(new Date());
+    const todayDay = days.find((d) => dayKey(d.date) === today);
+    setSelectedDayId(todayDay?.id ?? days[0].id);
   }, [days, selectedDayId]);
 
   useLayoutEffect(() => {
