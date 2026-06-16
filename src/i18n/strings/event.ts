@@ -33,6 +33,7 @@ const event = {
     // EventCard — libellés horaires
     'event.checkInAt': 'Check-in {time}',
     'event.departAt': 'Départ {time}',
+    'event.addExpense': 'Ajouter une dépense',
   },
   en: {
     // EventForm — field labels
@@ -66,6 +67,7 @@ const event = {
     // EventCard — time labels
     'event.checkInAt': 'Check-in {time}',
     'event.departAt': 'Departure {time}',
+    'event.addExpense': 'Add an expense',
   },
   pt: {
     // EventForm — rótulos de campos
@@ -99,6 +101,7 @@ const event = {
     // EventCard — rótulos de horário
     'event.checkInAt': 'Check-in {time}',
     'event.departAt': 'Partida {time}',
+    'event.addExpense': 'Adicionar uma despesa',
   },
 };
 

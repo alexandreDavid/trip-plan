@@ -19,12 +19,21 @@ import { DateField } from '@/components/ui/DateField';
 import { amountsSplitDiff } from '@/utils/expenses';
 import { expenseCategoryMeta, EXPENSE_CATEGORIES } from './expenseMeta';
 
+export interface ExpensePrefill {
+  eventId?: string;
+  label?: string;
+  amount?: number;
+  category?: ExpenseCategory;
+  date?: Date;
+}
+
 interface Props {
   participants: Participant[];
   events: TripEvent[];
   baseCurrency: string;
   currentUid?: string;
   initialExpense?: Expense;
+  prefill?: ExpensePrefill;
   submitting?: boolean;
   onSubmit: (input: ExpenseInput) => void;
 }
@@ -43,6 +52,7 @@ export function ExpenseForm({
   baseCurrency,
   currentUid,
   initialExpense,
+  prefill,
   submitting,
   onSubmit,
 }: Props) {
@@ -56,12 +66,18 @@ export function ExpenseForm({
     participants[0]?.id ??
     '';
 
-  const [label, setLabel] = useState(initialExpense?.label ?? '');
-  const [amount, setAmount] = useState(initialExpense ? String(initialExpense.amount) : '');
+  const [label, setLabel] = useState(initialExpense?.label ?? prefill?.label ?? '');
+  const [amount, setAmount] = useState(
+    initialExpense
+      ? String(initialExpense.amount)
+      : prefill?.amount != null
+        ? String(prefill.amount)
+        : '',
+  );
   const [currency, setCurrency] = useState(initialExpense?.currency ?? baseCurrency);
   const [rate, setRate] = useState(initialExpense ? String(initialExpense.rate) : '1');
   const [category, setCategory] = useState<ExpenseCategory>(
-    initialExpense?.category ?? ExpenseCategory.FOOD,
+    initialExpense?.category ?? prefill?.category ?? ExpenseCategory.FOOD,
   );
   const [paidBy, setPaidBy] = useState(defaultPayer);
   const [splitMode, setSplitMode] = useState<SplitMode>(initialExpense?.splitMode ?? 'equal');
@@ -75,9 +91,11 @@ export function ExpenseForm({
     }
     return init;
   });
-  const [eventId, setEventId] = useState<string | undefined>(initialExpense?.eventId);
+  const [eventId, setEventId] = useState<string | undefined>(
+    initialExpense?.eventId ?? prefill?.eventId,
+  );
   const [date, setDate] = useState<Date>(
-    initialExpense ? initialExpense.date.toDate() : new Date(),
+    initialExpense ? initialExpense.date.toDate() : prefill?.date ?? new Date(),
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 

@@ -3,13 +3,14 @@ import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { RootStackParamList, ExpenseInput } from '@/types';
+import { RootStackParamList, ExpenseInput, EventType, ExpenseCategory } from '@/types';
 import { DEFAULT_CURRENCY } from '@/config/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTrip } from '@/hooks/useTrip';
 import { useTripExpenses } from '@/hooks/useExpenses';
 import { useAllEvents } from '@/hooks/useEvents';
-import { ExpenseForm } from '@/components/expense/ExpenseForm';
+import { getEventPrimaryTime } from '@/utils/events';
+import { ExpenseForm, ExpensePrefill } from '@/components/expense/ExpenseForm';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { createExpense, updateExpense, deleteExpense } from '@/services/expenseService';
@@ -19,19 +20,39 @@ import { useT } from '@/i18n/I18nContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddEditExpense'>;
 
+// Catégorie de dépense par défaut selon le type d'événement source.
+const EVENT_TYPE_TO_CATEGORY: Record<EventType, ExpenseCategory> = {
+  [EventType.ACCOMMODATION]: ExpenseCategory.ACCOMMODATION,
+  [EventType.TRANSPORT]: ExpenseCategory.TRANSPORT,
+  [EventType.ACTIVITY]: ExpenseCategory.ACTIVITY,
+  [EventType.RESTAURANT]: ExpenseCategory.FOOD,
+};
+
 export function AddEditExpenseScreen({ route, navigation }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const t = useT();
-  const { tripId, expenseId } = route.params;
+  const { tripId, expenseId, eventId: eventIdParam } = route.params;
   const { user } = useAuth();
   const { trip } = useTrip(tripId);
   const { participants, expenses, loading } = useTripExpenses(tripId);
-  const { events } = useAllEvents(tripId);
+  const { events, loading: eventsLoading } = useAllEvents(tripId);
   const [submitting, setSubmitting] = useState(false);
 
   const baseCurrency = trip?.baseCurrency ?? DEFAULT_CURRENCY;
   const initialExpense = expenseId ? expenses.find((e) => e.id === expenseId) : undefined;
+
+  // Création depuis un événement : pré-remplit et pré-lie la dépense.
+  const sourceEvent = !expenseId && eventIdParam ? events.find((e) => e.id === eventIdParam) : undefined;
+  const prefill: ExpensePrefill | undefined = sourceEvent
+    ? {
+        eventId: sourceEvent.id,
+        label: sourceEvent.name,
+        amount: sourceEvent.budget,
+        category: EVENT_TYPE_TO_CATEGORY[sourceEvent.type],
+        date: getEventPrimaryTime(sourceEvent)?.toDate(),
+      }
+    : undefined;
 
   const handleDelete = () => {
     if (!expenseId) return;
@@ -59,7 +80,9 @@ export function AddEditExpenseScreen({ route, navigation }: Props) {
     });
   }, [navigation, expenseId, colors]);
 
-  if (loading || (expenseId && !initialExpense)) return <LoadingScreen />;
+  if (loading || (eventIdParam && eventsLoading) || (expenseId && !initialExpense)) {
+    return <LoadingScreen />;
+  }
 
   if (participants.length === 0) {
     return (
@@ -102,6 +125,7 @@ export function AddEditExpenseScreen({ route, navigation }: Props) {
         baseCurrency={baseCurrency}
         currentUid={user?.uid}
         initialExpense={initialExpense}
+        prefill={prefill}
         submitting={submitting}
         onSubmit={handleSubmit}
       />

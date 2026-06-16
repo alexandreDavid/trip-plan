@@ -10,6 +10,7 @@ import { useEvents } from '@/hooks/useEvents';
 import { deleteEvent } from '@/services/eventService';
 import { eventMeta } from '@/components/event/eventMeta';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { Button } from '@/components/ui/Button';
 import { Palette, radius, spacing, fontSize } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT, TranslateFn } from '@/i18n/I18nContext';
@@ -158,6 +159,14 @@ export function EventDetailScreen({ route, navigation }: Props) {
             <Text style={styles.notes}>{event.notes}</Text>
           </View>
         ) : null}
+
+        {canEdit && (
+          <Button
+            title={t('event.addExpense')}
+            variant="secondary"
+            onPress={() => navigation.navigate('AddEditExpense', { tripId, eventId: event.id })}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   );
