@@ -13,6 +13,7 @@ interface Props {
   type: EventType;
   initialEvent?: TripEvent;
   dayDate: Date; // date de la journee, pour construire les timestamps heure
+  currency: string; // devise du voyage (pour le libellé du budget)
   submitting?: boolean;
   onSubmit: (input: EventInput) => Promise<void> | void;
 }
@@ -48,7 +49,7 @@ const TRANSPORT_LABEL_KEYS: Record<TransportMode, string> = {
   other: 'event.transport.other',
 };
 
-export function EventForm({ type, initialEvent, dayDate, submitting, onSubmit }: Props) {
+export function EventForm({ type, initialEvent, dayDate, currency, submitting, onSubmit }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const t = useT();
@@ -252,7 +253,7 @@ export function EventForm({ type, initialEvent, dayDate, submitting, onSubmit }:
       )}
 
       <Input
-        label={t('event.budgetLabel')}
+        label={`${t('event.budgetLabel')} (${currency})`}
         value={budget}
         onChangeText={setBudget}
         keyboardType="decimal-pad"

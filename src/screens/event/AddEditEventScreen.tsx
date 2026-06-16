@@ -11,6 +11,8 @@ import {
   updateEvent,
 } from '@/services/eventService';
 import { getDaysOnce } from '@/services/tripService';
+import { useTrip } from '@/hooks/useTrip';
+import { DEFAULT_CURRENCY } from '@/config/constants';
 import { spacing, Palette } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
@@ -22,6 +24,8 @@ export function AddEditEventScreen({ route, navigation }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const t = useT();
+  const { trip } = useTrip(tripId);
+  const currency = trip?.baseCurrency ?? DEFAULT_CURRENCY;
   const [initialEvent, setInitialEvent] = useState<TripEvent | undefined>();
   const [dayDate, setDayDate] = useState<Date | undefined>();
   const [existingCount, setExistingCount] = useState(0);
@@ -75,6 +79,7 @@ export function AddEditEventScreen({ route, navigation }: Props) {
           type={resolvedType}
           initialEvent={initialEvent}
           dayDate={dayDate}
+          currency={currency}
           submitting={submitting}
           onSubmit={handleSubmit}
         />
