@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import * as Localization from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setDateLocale } from '@/utils/dates';
 import { translations } from './translations';
 
 export type Language = 'fr' | 'en' | 'pt';
@@ -40,6 +41,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   };
 
   const lang: Language = mode === 'system' ? deviceLanguage() : mode;
+  // Garde la locale des dates (date-fns) alignée sur la langue de l'app.
+  setDateLocale(lang);
 
   const t = useMemo<TranslateFn>(
     () => (key, params) => {

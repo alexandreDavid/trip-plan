@@ -11,7 +11,7 @@ import { EventTypePicker } from '@/components/event/EventTypePicker';
 import { DEFAULT_CURRENCY } from '@/config/constants';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { getDayLabel } from '@/utils/dates';
+import { formatDate } from '@/utils/dates';
 import { sortEventsChronologically } from '@/utils/events';
 import { spacing, fontSize, Palette } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -67,7 +67,7 @@ export function TimelineScreen({ route, navigation }: Props) {
                 <View style={styles.dayHeaderLeft}>
                   <View style={styles.dayDot} />
                   <Text style={styles.dayLabel} numberOfLines={1}>
-                    {getDayLabel(index, day.date)}
+                    {`${t('trip.day', { index: index + 1 })} · ${formatDate(day.date, 'EEE d MMM')}`}
                   </Text>
                 </View>
                 {canEdit && (
