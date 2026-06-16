@@ -19,6 +19,7 @@ import { spacing, radius, fontSize, Palette } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
 import { formatDateRange } from '@/utils/dates';
+import { sortEventsChronologically } from '@/utils/events';
 import { EventTypePicker } from '@/components/event/EventTypePicker';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TripDetail'>;
@@ -31,6 +32,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const { trip, days, loading, isOwner, canEdit } = useTrip(tripId);
   const [selectedDayId, setSelectedDayId] = useState<string | undefined>();
   const { events } = useEvents(tripId, selectedDayId);
+  const sortedEvents = useMemo(() => sortEventsChronologically(events), [events]);
   const budget = useTripBudget(tripId);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -117,7 +119,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
             </View>
           ) : (
             <FlatList
-              data={events}
+              data={sortedEvents}
               scrollEnabled={false}
               keyExtractor={(e) => e.id}
               renderItem={({ item }) => (
