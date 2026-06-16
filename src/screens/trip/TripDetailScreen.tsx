@@ -14,7 +14,6 @@ import { BudgetSummary } from '@/components/budget/BudgetSummary';
 import { DEFAULT_CURRENCY } from '@/config/constants';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { deleteEvent } from '@/services/eventService';
 import { deleteTrip } from '@/services/tripService';
 import { spacing, radius, fontSize, Palette } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -72,18 +71,6 @@ export function TripDetailScreen({ route, navigation }: Props) {
     ]);
   };
 
-  const handleDeleteEvent = (eventId: string) => {
-    if (!selectedDayId) return;
-    Alert.alert(t('trip.deleteEventTitle'), '', [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: () => deleteEvent(tripId, selectedDayId, eventId),
-      },
-    ]);
-  };
-
   if (loading || !trip) return <LoadingScreen />;
 
   const selectedDay = days.find((d) => d.id === selectedDayId);
@@ -137,8 +124,6 @@ export function TripDetailScreen({ route, navigation }: Props) {
                 <EventCard
                   event={item}
                   currency={trip.baseCurrency ?? DEFAULT_CURRENCY}
-                  editable={canEdit}
-                  onDelete={() => handleDeleteEvent(item.id)}
                   onPress={() =>
                     navigation.navigate('EventDetail', {
                       tripId,
