@@ -21,6 +21,7 @@ export type RootStackParamList = {
     eventId?: string;
     eventType?: EventType;
   };
+  EventDetail: { tripId: string; dayId: string; eventId: string };
   ShareTrip: { tripId: string };
   Expenses: { tripId: string };
   AddEditExpense: { tripId: string; expenseId?: string };

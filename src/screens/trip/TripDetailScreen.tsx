@@ -3,7 +3,7 @@ import { Alert, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { RootStackParamList, EventType } from '@/types';
+import { RootStackParamList } from '@/types';
 import { useTrip } from '@/hooks/useTrip';
 import { useEvents } from '@/hooks/useEvents';
 import { useTripBudget } from '@/hooks/useBudget';
@@ -20,16 +20,9 @@ import { spacing, radius, fontSize, Palette } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
 import { formatDateRange } from '@/utils/dates';
-import { eventMeta } from '@/components/event/eventMeta';
+import { EventTypePicker } from '@/components/event/EventTypePicker';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TripDetail'>;
-
-const EVENT_TYPES: EventType[] = [
-  EventType.ACCOMMODATION,
-  EventType.TRANSPORT,
-  EventType.ACTIVITY,
-  EventType.RESTAURANT,
-];
 
 export function TripDetailScreen({ route, navigation }: Props) {
   const { colors } = useTheme();
@@ -146,16 +139,12 @@ export function TripDetailScreen({ route, navigation }: Props) {
                   currency={trip.baseCurrency ?? DEFAULT_CURRENCY}
                   editable={canEdit}
                   onDelete={() => handleDeleteEvent(item.id)}
-                  onPress={
-                    canEdit
-                      ? () =>
-                          navigation.navigate('AddEditEvent', {
-                            tripId,
-                            dayId: item.dayId,
-                            eventId: item.id,
-                            eventType: item.type,
-                          })
-                      : undefined
+                  onPress={() =>
+                    navigation.navigate('EventDetail', {
+                      tripId,
+                      dayId: item.dayId,
+                      eventId: item.id,
+                    })
                   }
                 />
               )}
@@ -165,42 +154,20 @@ export function TripDetailScreen({ route, navigation }: Props) {
       </ScrollView>
 
       {canEdit && selectedDayId && (
-        <>
-          {pickerOpen && (
-            <View style={styles.pickerBackdrop}>
-              <Pressable style={styles.backdropPress} onPress={() => setPickerOpen(false)} />
-              <View style={styles.pickerCard}>
-                <Text style={styles.pickerTitle}>{t('trip.eventTypeTitle')}</Text>
-                {EVENT_TYPES.map((type) => {
-                  const meta = eventMeta[type];
-                  return (
-                    <Pressable
-                      key={type}
-                      style={styles.pickerItem}
-                      onPress={() => {
-                        setPickerOpen(false);
-                        navigation.navigate('AddEditEvent', {
-                          tripId,
-                          dayId: selectedDayId,
-                          eventType: type,
-                        });
-                      }}
-                    >
-                      <View style={[styles.pickerIcon, { backgroundColor: meta.color + '22' }]}>
-                        <Ionicons name={meta.icon} size={20} color={meta.color} />
-                      </View>
-                      <Text style={styles.pickerLabel}>{t(meta.labelKey)}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          )}
-          <Pressable style={styles.fab} onPress={() => setPickerOpen(true)}>
-            <Ionicons name="add" size={28} color="#fff" />
-          </Pressable>
-        </>
+        <Pressable style={styles.fab} onPress={() => setPickerOpen(true)}>
+          <Ionicons name="add" size={28} color="#fff" />
+        </Pressable>
       )}
+      <EventTypePicker
+        visible={pickerOpen && !!selectedDayId}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(type) => {
+          setPickerOpen(false);
+          if (selectedDayId) {
+            navigation.navigate('AddEditEvent', { tripId, dayId: selectedDayId, eventType: type });
+          }
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -230,30 +197,4 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
   },
-  pickerBackdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
-  backdropPress: { ...StyleSheet.absoluteFillObject },
-  pickerCard: {
-    backgroundColor: colors.surface,
-    padding: spacing.lg,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
-  },
-  pickerTitle: { fontSize: fontSize.lg, fontWeight: '700', marginBottom: spacing.md, color: colors.text },
-  pickerItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, gap: spacing.md },
-  pickerIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pickerLabel: { fontSize: fontSize.md, color: colors.text, fontWeight: '500' },
 });

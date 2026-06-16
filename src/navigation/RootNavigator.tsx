@@ -9,6 +9,7 @@ import { MainTabs } from './MainTabs';
 import { TripDetailScreen } from '@/screens/trip/TripDetailScreen';
 import { AddEditTripScreen } from '@/screens/trip/AddEditTripScreen';
 import { AddEditEventScreen } from '@/screens/event/AddEditEventScreen';
+import { EventDetailScreen } from '@/screens/event/EventDetailScreen';
 import { ShareTripScreen } from '@/screens/trip/ShareTripScreen';
 import { ExpensesScreen } from '@/screens/expense/ExpensesScreen';
 import { AddEditExpenseScreen } from '@/screens/expense/AddEditExpenseScreen';
@@ -56,6 +57,7 @@ export function RootNavigator() {
           presentation: 'modal',
         })}
       />
+      <Stack.Screen name="EventDetail" component={EventDetailScreen} options={{ title: '' }} />
       <Stack.Screen
         name="ShareTrip"
         component={ShareTripScreen}

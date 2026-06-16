@@ -1,11 +1,13 @@
-import React, { useLayoutEffect, useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useLayoutEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList, TripEvent } from '@/types';
 import { useTrip } from '@/hooks/useTrip';
 import { useAllEvents } from '@/hooks/useEvents';
 import { EventCard } from '@/components/event/EventCard';
+import { EventTypePicker } from '@/components/event/EventTypePicker';
 import { DEFAULT_CURRENCY } from '@/config/constants';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -24,6 +26,7 @@ export function TimelineScreen({ route, navigation }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const t = useT();
+  const [pickerDayId, setPickerDayId] = useState<string | null>(null);
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: t('nav.timeline') });
@@ -53,20 +56,6 @@ export function TimelineScreen({ route, navigation }: Props) {
     );
   }
 
-  if (events.length === 0) {
-    return (
-      <SafeAreaView style={styles.safe} edges={['bottom']}>
-        <View style={styles.emptyWrap}>
-          <EmptyState
-            icon="time-outline"
-            title={t('tripx.emptyItineraryTitle')}
-            subtitle={t('tripx.emptyItinerarySubtitle')}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.container}>
@@ -75,8 +64,17 @@ export function TimelineScreen({ route, navigation }: Props) {
           return (
             <View key={day.id} style={styles.daySection}>
               <View style={styles.dayHeader}>
-                <View style={styles.dayDot} />
-                <Text style={styles.dayLabel}>{getDayLabel(index, day.date)}</Text>
+                <View style={styles.dayHeaderLeft}>
+                  <View style={styles.dayDot} />
+                  <Text style={styles.dayLabel} numberOfLines={1}>
+                    {getDayLabel(index, day.date)}
+                  </Text>
+                </View>
+                {canEdit && (
+                  <Pressable onPress={() => setPickerDayId(day.id)} hitSlop={8}>
+                    <Ionicons name="add-circle-outline" size={24} color={colors.primary} />
+                  </Pressable>
+                )}
               </View>
               {dayEvents.length === 0 ? (
                 <Text style={styles.emptyDay}>{t('tripx.nothingPlanned')}</Text>
@@ -86,16 +84,12 @@ export function TimelineScreen({ route, navigation }: Props) {
                     key={event.id}
                     event={event}
                     currency={trip.baseCurrency ?? DEFAULT_CURRENCY}
-                    onPress={
-                      canEdit
-                        ? () =>
-                            navigation.navigate('AddEditEvent', {
-                              tripId,
-                              dayId: event.dayId,
-                              eventId: event.id,
-                              eventType: event.type,
-                            })
-                        : undefined
+                    onPress={() =>
+                      navigation.navigate('EventDetail', {
+                        tripId,
+                        dayId: event.dayId,
+                        eventId: event.id,
+                      })
                     }
                   />
                 ))
@@ -104,23 +98,40 @@ export function TimelineScreen({ route, navigation }: Props) {
           );
         })}
       </ScrollView>
+
+      <EventTypePicker
+        visible={pickerDayId != null}
+        onClose={() => setPickerDayId(null)}
+        onSelect={(type) => {
+          const dayId = pickerDayId;
+          setPickerDayId(null);
+          if (dayId) navigation.navigate('AddEditEvent', { tripId, dayId, eventType: type });
+        }}
+      />
     </SafeAreaView>
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  container: { padding: spacing.md },
-  emptyWrap: { flex: 1, padding: spacing.md },
-  daySection: { marginBottom: spacing.lg },
-  dayHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
-  dayDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
-  dayLabel: { fontSize: fontSize.md, fontWeight: '700', color: colors.text },
-  emptyDay: {
-    fontSize: fontSize.sm,
-    color: colors.textMuted,
-    fontStyle: 'italic',
-    marginLeft: spacing.md + 2,
-    marginBottom: spacing.sm,
-  },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    container: { padding: spacing.md },
+    emptyWrap: { flex: 1, padding: spacing.md },
+    daySection: { marginBottom: spacing.lg },
+    dayHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing.sm,
+    },
+    dayHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
+    dayDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
+    dayLabel: { fontSize: fontSize.md, fontWeight: '700', color: colors.text },
+    emptyDay: {
+      fontSize: fontSize.sm,
+      color: colors.textMuted,
+      fontStyle: 'italic',
+      marginLeft: spacing.md + 2,
+      marginBottom: spacing.sm,
+    },
+  });
