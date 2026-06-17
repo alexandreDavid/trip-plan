@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { alertDialog } from '@/utils/dialog';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +16,7 @@ import { spacing, fontSize, radius, Palette } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
 import { validateTripForm } from '@/utils/validation';
+import { toDate } from '@/utils/dates';
 import { DateField } from '@/components/ui/DateField';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddEditTrip'>;
@@ -44,8 +46,8 @@ export function AddEditTripScreen({ route, navigation }: Props) {
       if (!trip) return;
       setName(trip.name);
       setDestination(trip.destination);
-      setStartDate(trip.startDate.toDate());
-      setEndDate(trip.endDate.toDate());
+      setStartDate(toDate(trip.startDate));
+      setEndDate(toDate(trip.endDate));
       setBaseCurrency(trip.baseCurrency ?? DEFAULT_CURRENCY);
       setCoverRemoteUrl(trip.coverImageURL);
     })();
@@ -88,12 +90,12 @@ export function AddEditTripScreen({ route, navigation }: Props) {
           const url = await uploadTripCoverImage(id, coverLocalUri);
           await updateTrip(id, { coverImageURL: url });
         } catch {
-          Alert.alert(t('common.error'), t('common.imageUploadFailed'));
+          alertDialog(t('common.error'), t('common.imageUploadFailed'));
         }
       }
       navigation.goBack();
     } catch (err) {
-      Alert.alert(t('common.error'), (err as Error).message);
+      alertDialog(t('common.error'), (err as Error).message);
     } finally {
       setSubmitting(false);
     }

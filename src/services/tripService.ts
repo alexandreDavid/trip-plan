@@ -21,7 +21,7 @@ import {
 import { db } from '@/config/firebase';
 import { Collections, DEFAULT_CURRENCY } from '@/config/constants';
 import { Trip, TripInput, Day, TripRole } from '@/types';
-import { getDaysBetween, dayKey } from '@/utils/dates';
+import { getDaysBetween, dayKey, dateToTimestamp, toDate } from '@/utils/dates';
 import { generateInviteToken } from '@/utils/invite';
 
 function tripCol() {
@@ -61,8 +61,8 @@ export async function createTrip(
   await setDoc(tripRef, {
     name: input.name,
     destination: input.destination,
-    startDate: Timestamp.fromDate(input.startDate),
-    endDate: Timestamp.fromDate(input.endDate),
+    startDate: dateToTimestamp(input.startDate),
+    endDate: dateToTimestamp(input.endDate),
     coverImageURL: input.coverImageURL ?? null,
     ownerId,
     sharedWith: [],
@@ -78,7 +78,7 @@ export async function createTrip(
     const dayRef = doc(daysCol(tripRef.id));
     batch.set(dayRef, {
       tripId: tripRef.id,
-      date: Timestamp.fromDate(date),
+      date: dateToTimestamp(date),
       order: idx,
     });
   });
@@ -186,8 +186,8 @@ export async function updateTrip(
   },
 ): Promise<void> {
   const data: Record<string, unknown> = { ...updates, updatedAt: serverTimestamp() };
-  if (updates.startDate) data.startDate = Timestamp.fromDate(updates.startDate);
-  if (updates.endDate) data.endDate = Timestamp.fromDate(updates.endDate);
+  if (updates.startDate) data.startDate = dateToTimestamp(updates.startDate);
+  if (updates.endDate) data.endDate = dateToTimestamp(updates.endDate);
   await updateDoc(doc(db, Collections.TRIPS, tripId), data);
 
   // Si les dates changent, on resynchronise les jours cote client (pas de Cloud
@@ -195,8 +195,8 @@ export async function updateTrip(
   if (updates.startDate || updates.endDate) {
     const trip = await getTrip(tripId);
     if (trip) {
-      const newStart = updates.startDate ?? trip.startDate.toDate();
-      const newEnd = updates.endDate ?? trip.endDate.toDate();
+      const newStart = updates.startDate ?? toDate(trip.startDate);
+      const newEnd = updates.endDate ?? toDate(trip.endDate);
       await syncTripDays(tripId, newStart, newEnd);
     }
   }
@@ -208,7 +208,7 @@ export async function updateTrip(
 // - reordonne chronologiquement les jours conserves.
 async function syncTripDays(tripId: string, start: Date, end: Date): Promise<void> {
   const existing = await getDaysOnce(tripId);
-  const existingByKey = new Map(existing.map((d) => [dayKey(d.date.toDate()), d]));
+  const existingByKey = new Map(existing.map((d) => [dayKey(d.date), d]));
 
   const targetDates = getDaysBetween(start, end);
   const targetKeys = new Set(targetDates.map((d) => dayKey(d)));
@@ -217,7 +217,7 @@ async function syncTripDays(tripId: string, start: Date, end: Date): Promise<voi
 
   // Suppression des jours hors plage + leurs evenements.
   for (const day of existing) {
-    if (targetKeys.has(dayKey(day.date.toDate()))) continue;
+    if (targetKeys.has(dayKey(day.date))) continue;
     const eventsSnap = await getDocs(eventsCol(tripId, day.id));
     eventsSnap.forEach((e) => ops.push((batch) => batch.delete(e.ref)));
     ops.push((batch) => batch.delete(doc(daysCol(tripId), day.id)));
@@ -233,7 +233,7 @@ async function syncTripDays(tripId: string, start: Date, end: Date): Promise<voi
     } else {
       const ref = doc(daysCol(tripId));
       ops.push((batch) =>
-        batch.set(ref, { tripId, date: Timestamp.fromDate(date), order: idx }),
+        batch.set(ref, { tripId, date: dateToTimestamp(date), order: idx }),
       );
     }
   });

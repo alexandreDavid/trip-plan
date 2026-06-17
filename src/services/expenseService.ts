@@ -13,6 +13,7 @@ import {
 import { db } from '@/config/firebase';
 import { Collections } from '@/config/constants';
 import { Participant, ParticipantInput, Expense, ExpenseInput } from '@/types';
+import { dateToTimestamp } from '@/utils/dates';
 
 function participantsCol(tripId: string) {
   return collection(db, Collections.TRIPS, tripId, Collections.PARTICIPANTS);
@@ -65,7 +66,7 @@ function serializeExpenseInput(input: ExpenseInput): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(input)) {
     if (value instanceof Date) {
-      out[key] = Timestamp.fromDate(value);
+      out[key] = dateToTimestamp(value);
     } else if (value !== undefined) {
       out[key] = value;
     }

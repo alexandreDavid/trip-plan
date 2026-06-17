@@ -1,22 +1,41 @@
 {
   "expo": {
-    "name": "Trip Plan",
+    "name": "Cardume",
     "slug": "trip-plan",
     "version": "1.0.0",
+    "description": "Planifiez vos voyages à plusieurs et partagez les dépenses, ensemble.",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "scheme": "tripplan",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF5A5F"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tripplan.app"
     },
     "android": {
       "package": "com.tripplan.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FF5A5F"
+      },
       "config": {
         "googleMaps": {
           "apiKey": "REMPLACER_PAR_CLE_MAPS_ANDROID"
         }
       }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "Cardume",
+      "shortName": "Cardume",
+      "themeColor": "#FF5A5F",
+      "backgroundColor": "#FFF7F3",
+      "description": "Planifiez vos voyages à plusieurs et partagez les dépenses, ensemble."
     },
     "plugins": [
       "expo-image-picker",

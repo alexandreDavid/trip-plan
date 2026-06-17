@@ -9,7 +9,7 @@ import type { TranslateFn } from '@/i18n/I18nContext';
 import { formatTime } from '@/utils/dates';
 import { formatMoney } from '@/utils/expenses';
 import { DEFAULT_CURRENCY } from '@/config/constants';
-import { eventMeta } from './eventMeta';
+import { eventMeta, eventIcon } from './eventMeta';
 
 interface Props {
   event: TripEvent;
@@ -68,7 +68,7 @@ export function EventCard({ event, currency = DEFAULT_CURRENCY, onPress, onDelet
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
       <View style={[styles.iconWrap, { backgroundColor: meta.color + '22' }]}>
-        <Ionicons name={meta.icon} size={22} color={meta.color} />
+        <Ionicons name={eventIcon(event)} size={22} color={meta.color} />
       </View>
       <View style={styles.body}>
         <View style={styles.row}>

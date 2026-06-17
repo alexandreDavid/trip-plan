@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { alertDialog } from '@/utils/dialog';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@/types';
@@ -37,7 +38,7 @@ export function RegisterScreen({ navigation }: Props) {
     try {
       await signUp(email.trim(), password, displayName.trim());
     } catch (err) {
-      Alert.alert(t('auth.signUpError'), (err as Error).message);
+      alertDialog(t('auth.signUpError'), (err as Error).message);
     }
   };
 
@@ -45,7 +46,7 @@ export function RegisterScreen({ navigation }: Props) {
     try {
       await signInWithGoogle();
     } catch (err) {
-      Alert.alert(t('auth.googleError'), (err as Error).message);
+      alertDialog(t('auth.googleError'), (err as Error).message);
     }
   };
 

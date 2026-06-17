@@ -11,10 +11,12 @@ import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { WEB_URL } from '@/utils/invite';
 
-// Liens profonds : tripplan://join/<tripId>/<token> -> écran Rejoindre.
+// Liens d'invitation : https://<web>/join/<tripId>/<token> (ouvrable dans un
+// navigateur) ou tripplan://join/... (schéma natif). Les deux -> écran Rejoindre.
 const linking = {
-  prefixes: ['tripplan://'],
+  prefixes: ['tripplan://', WEB_URL, 'https://trip-plan-4a18a.firebaseapp.com'],
   config: {
     screens: {
       JoinTrip: 'join/:tripId/:token',

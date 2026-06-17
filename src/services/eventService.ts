@@ -14,6 +14,7 @@ import {
 import { db } from '@/config/firebase';
 import { Collections } from '@/config/constants';
 import { TripEvent, EventInput } from '@/types';
+import { dateToTimestamp } from '@/utils/dates';
 
 function eventsCol(tripId: string, dayId: string) {
   return collection(db, Collections.TRIPS, tripId, Collections.DAYS, dayId, Collections.EVENTS);
@@ -24,7 +25,7 @@ function serializeEventInput(input: EventInput): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(input)) {
     if (value instanceof Date) {
-      out[key] = Timestamp.fromDate(value);
+      out[key] = dateToTimestamp(value);
     } else if (value === undefined) {
       // ignore - Firestore refuse undefined
     } else {

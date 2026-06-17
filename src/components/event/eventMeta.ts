@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { EventType } from '@/types';
+import { EventType, TransportMode, TripEvent } from '@/types';
 import { accent } from '@/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -11,3 +11,23 @@ export const eventMeta: Record<EventType, { icon: IconName; color: string; label
   [EventType.ACTIVITY]: { icon: 'map-outline', color: accent.activity, labelKey: 'event.type.activity' },
   [EventType.RESTAURANT]: { icon: 'restaurant-outline', color: accent.restaurant, labelKey: 'event.type.restaurant' },
 };
+
+// Icône spécifique au mode de transport. La catégorie "transport" garde l'avion
+// générique dans eventMeta (sélecteur de type, budget) ; ici on précise selon
+// le mode réellement choisi sur l'événement.
+export const transportIcons: Record<TransportMode, IconName> = {
+  flight: 'airplane-outline',
+  train: 'train-outline',
+  bus: 'bus-outline',
+  car: 'car-outline',
+  ferry: 'boat-outline',
+  other: 'navigate-outline',
+};
+
+// Icône d'un événement concret : adapte le transport à son mode, sinon l'icône
+// de sa catégorie.
+export function eventIcon(event: TripEvent): IconName {
+  return event.type === EventType.TRANSPORT
+    ? transportIcons[event.transportMode]
+    : eventMeta[event.type].icon;
+}

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Expense } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,9 +11,13 @@ import { Button } from '@/components/ui/Button';
 import { Palette, radius, spacing, fontSize } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
+import { formatCents } from '@/utils/expenses';
+import { avatarColor, initials } from '@/utils/avatar';
+import { confirmDialog, alertDialog } from '@/utils/dialog';
 
 // Gestion des participants "par nom" (sans compte ni lien) : ajout manuel,
-// liste, retrait. Réutilisé dans l'onglet Participants et sous Dépenses.
+// liste, retrait. Réutilisé dans la page Participants (avec soldes) et sous
+// l'écran "Partager le voyage" (identité seule, showBalances=false).
 
 function isReferenced(participantId: string, expenses: Expense[]): boolean {
   return expenses.some(
@@ -21,47 +25,79 @@ function isReferenced(participantId: string, expenses: Expense[]): boolean {
   );
 }
 
-export function ParticipantsManager({ tripId }: { tripId: string }) {
+interface Props {
+  tripId: string;
+  // Affiche le solde de chaque participant + un en-tête récapitulatif.
+  showBalances?: boolean;
+}
+
+export function ParticipantsManager({ tripId, showBalances = false }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const t = useT();
   const { user } = useAuth();
-  const { canEdit } = useTrip(tripId);
-  const { participants, expenses } = useTripExpenses(tripId);
+  const { canEdit, trip } = useTrip(tripId);
+  const { participants, expenses, balances, totalInBase } = useTripExpenses(tripId);
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const baseCurrency = trip?.baseCurrency ?? 'EUR';
   const selfPresent = participants.some((p) => p.uid === user?.uid);
 
   const handleAdd = async (displayName: string, uid?: string | null) => {
     if (!displayName.trim()) return;
     setSubmitting(true);
     try {
-      await addParticipant(tripId, { displayName, uid: uid ?? null });
+      await addParticipant(tripId, { displayName: displayName.trim(), uid: uid ?? null });
       setName('');
     } catch (err) {
-      Alert.alert(t('common.error'), (err as Error).message);
+      alertDialog(t('common.error'), (err as Error).message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleRemove = (participantId: string, displayName: string) => {
+  const handleRemove = async (participantId: string, displayName: string) => {
     if (isReferenced(participantId, expenses)) {
-      Alert.alert(t('expense.cannotRemoveTitle'), t('expense.cannotRemoveBody', { name: displayName }));
+      alertDialog(t('expense.cannotRemoveTitle'), t('expense.cannotRemoveBody', { name: displayName }));
       return;
     }
-    Alert.alert(t('expense.removeConfirmTitle'), t('expense.removeConfirmBody', { name: displayName }), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('common.remove'), style: 'destructive', onPress: () => removeParticipant(tripId, participantId) },
-    ]);
+    const ok = await confirmDialog({
+      title: t('expense.removeConfirmTitle'),
+      message: t('expense.removeConfirmBody', { name: displayName }),
+      confirmLabel: t('common.remove'),
+      cancelLabel: t('common.cancel'),
+      destructive: true,
+    });
+    if (ok) removeParticipant(tripId, participantId);
   };
+
+  const peopleLabel =
+    participants.length === 1
+      ? t('expense.peopleOne')
+      : t('expense.peopleMany', { count: participants.length });
 
   return (
     <View>
+      {participants.length > 0 && (
+        <View style={styles.headerRow}>
+          <Ionicons name="people" size={18} color={colors.primary} />
+          <Text style={styles.headerText} numberOfLines={1}>
+            {peopleLabel}
+            {showBalances && totalInBase > 0
+              ? ` · ${t('expense.totalSpentInline', {
+                  amount: formatCents(Math.round(totalInBase * 100), baseCurrency),
+                })}`
+              : ''}
+          </Text>
+        </View>
+      )}
+
       {canEdit && (
         <>
-          <Text style={styles.subtitle}>{t('expense.addParticipantSubtitle')}</Text>
+          {participants.length === 0 && (
+            <Text style={styles.subtitle}>{t('expense.addParticipantSubtitle')}</Text>
+          )}
           <View style={styles.addRow}>
             <View style={{ flex: 1 }}>
               <Input value={name} onChangeText={setName} placeholder={t('expense.firstNamePlaceholder')} />
@@ -83,24 +119,54 @@ export function ParticipantsManager({ tripId }: { tripId: string }) {
       )}
 
       {participants.length === 0 ? (
-        <Text style={styles.empty}>{t('expense.noParticipantsYet')}</Text>
+        <View style={styles.empty}>
+          <Ionicons name="people-outline" size={32} color={colors.textMuted} />
+          <Text style={styles.emptyText}>
+            {canEdit ? t('expense.addFirstParticipant') : t('expense.noParticipantsYet')}
+          </Text>
+        </View>
       ) : (
-        participants.map((item) => (
-          <View key={item.id} style={styles.row}>
-            <View style={[styles.avatar, styles.avatarPlaceholder]}>
-              <Text style={styles.avatarInitial}>{item.displayName.charAt(0).toUpperCase()}</Text>
+        participants.map((item) => {
+          const isSelf = !!item.uid && item.uid === user?.uid;
+          const isLinked = !!item.uid && !isSelf;
+          const badgeLabel = isSelf ? t('expense.you') : isLinked ? t('expense.linkedAccount') : t('expense.guest');
+          const badgeColor = isSelf ? colors.primary : isLinked ? colors.secondary : colors.textMuted;
+          const badgeBg = isSelf
+            ? colors.primary + '1A'
+            : isLinked
+              ? colors.secondary + '1A'
+              : colors.border;
+
+          const cents = balances[item.id] ?? 0;
+          const positive = cents > 0;
+          const zero = cents === 0;
+          const balanceText = zero ? '—' : `${positive ? '+' : ''}${formatCents(cents, baseCurrency)}`;
+          const balanceStyle = zero ? styles.balNeutral : positive ? styles.balPositive : styles.balNegative;
+
+          return (
+            <View key={item.id} style={styles.row}>
+              <View style={[styles.avatar, { backgroundColor: avatarColor(item.displayName) }]}>
+                <Text style={styles.avatarInitial}>{initials(item.displayName)}</Text>
+              </View>
+              <View style={styles.body}>
+                <Text style={styles.name} numberOfLines={1}>{item.displayName}</Text>
+                <View style={[styles.badge, { backgroundColor: badgeBg }]}>
+                  <Text style={[styles.badgeText, { color: badgeColor }]}>{badgeLabel}</Text>
+                </View>
+              </View>
+              {showBalances && (
+                <Text style={[styles.balance, balanceStyle]} numberOfLines={1}>
+                  {balanceText}
+                </Text>
+              )}
+              {canEdit && (
+                <Pressable onPress={() => handleRemove(item.id, item.displayName)} hitSlop={8}>
+                  <Ionicons name="close-circle" size={22} color={colors.textMuted} />
+                </Pressable>
+              )}
             </View>
-            <View style={styles.body}>
-              <Text style={styles.name}>{item.displayName}</Text>
-              {item.uid ? <Text style={styles.linked}>{t('expense.linkedAccount')}</Text> : null}
-            </View>
-            {canEdit && (
-              <Pressable onPress={() => handleRemove(item.id, item.displayName)} hitSlop={8}>
-                <Ionicons name="close-circle" size={24} color={colors.danger} />
-              </Pressable>
-            )}
-          </View>
-        ))
+          );
+        })
       )}
     </View>
   );
@@ -108,12 +174,20 @@ export function ParticipantsManager({ tripId }: { tripId: string }) {
 
 const makeStyles = (colors: Palette) =>
   StyleSheet.create({
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      marginBottom: spacing.md,
+    },
+    headerText: { flex: 1, fontSize: fontSize.md, fontWeight: '700', color: colors.text },
     subtitle: { fontSize: fontSize.sm, color: colors.textMuted, marginBottom: spacing.md },
     addRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
     addBtn: { paddingHorizontal: spacing.md },
     selfRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.sm, marginBottom: spacing.sm },
     selfText: { color: colors.primary, fontSize: fontSize.sm, fontWeight: '600' },
-    empty: { fontSize: fontSize.sm, color: colors.textMuted, fontStyle: 'italic', paddingVertical: spacing.sm },
+    empty: { alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.lg },
+    emptyText: { fontSize: fontSize.sm, color: colors.textMuted, fontStyle: 'italic' },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -121,12 +195,21 @@ const makeStyles = (colors: Palette) =>
       padding: spacing.md,
       borderRadius: radius.md,
       marginBottom: spacing.sm,
-      gap: spacing.md,
+      gap: spacing.sm,
     },
-    avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.border },
-    avatarPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-    avatarInitial: { fontSize: fontSize.md, fontWeight: '700', color: colors.text },
-    body: { flex: 1 },
+    avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+    avatarInitial: { fontSize: fontSize.md, fontWeight: '700', color: '#FFFFFF' },
+    body: { flex: 1, gap: 3 },
     name: { fontSize: fontSize.md, fontWeight: '600', color: colors.text },
-    linked: { fontSize: fontSize.xs, color: colors.textMuted, marginTop: 2 },
+    badge: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 1,
+      borderRadius: radius.full,
+    },
+    badgeText: { fontSize: fontSize.xs, fontWeight: '700' },
+    balance: { fontSize: fontSize.md, fontWeight: '700', marginLeft: spacing.xs },
+    balPositive: { color: colors.success },
+    balNegative: { color: colors.danger },
+    balNeutral: { color: colors.textMuted },
   });

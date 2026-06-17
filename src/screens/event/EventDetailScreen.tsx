@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useMemo } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,7 +8,7 @@ import { DEFAULT_CURRENCY } from '@/config/constants';
 import { useTrip } from '@/hooks/useTrip';
 import { useEvents } from '@/hooks/useEvents';
 import { deleteEvent } from '@/services/eventService';
-import { eventMeta } from '@/components/event/eventMeta';
+import { eventMeta, eventIcon } from '@/components/event/eventMeta';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { Button } from '@/components/ui/Button';
 import { Palette, radius, spacing, fontSize } from '@/theme';
@@ -16,6 +16,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useT, TranslateFn } from '@/i18n/I18nContext';
 import { formatTime, formatDate } from '@/utils/dates';
 import { formatMoney } from '@/utils/expenses';
+import { confirmDialog } from '@/utils/dialog';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EventDetail'>;
 
@@ -75,18 +76,16 @@ export function EventDetailScreen({ route, navigation }: Props) {
   const event = events.find((e) => e.id === eventId);
   const currency = trip?.baseCurrency ?? DEFAULT_CURRENCY;
 
-  const handleDelete = () => {
-    Alert.alert(t('trip.deleteEventTitle'), '', [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: async () => {
-          await deleteEvent(tripId, dayId, eventId);
-          navigation.goBack();
-        },
-      },
-    ]);
+  const handleDelete = async () => {
+    const ok = await confirmDialog({
+      title: t('trip.deleteEventTitle'),
+      confirmLabel: t('common.delete'),
+      cancelLabel: t('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
+    await deleteEvent(tripId, dayId, eventId);
+    navigation.goBack();
   };
 
   useLayoutEffect(() => {
@@ -130,7 +129,7 @@ export function EventDetailScreen({ route, navigation }: Props) {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <View style={[styles.iconWrap, { backgroundColor: meta.color + '22' }]}>
-            <Ionicons name={meta.icon} size={26} color={meta.color} />
+            <Ionicons name={eventIcon(event)} size={26} color={meta.color} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{event.name}</Text>

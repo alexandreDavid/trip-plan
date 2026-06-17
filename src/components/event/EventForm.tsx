@@ -75,7 +75,7 @@ export function EventForm({ type, initialEvent, dayDate, currency, submitting, o
   // jours). Défaut = jour de l'événement (= jour du check-in).
   const [checkOutDate, setCheckOutDate] = useState<Date>(
     initialEvent?.type === EventType.ACCOMMODATION && initialEvent.checkOutTime
-      ? initialEvent.checkOutTime.toDate()
+      ? toDate(initialEvent.checkOutTime)
       : dayDate,
   );
 

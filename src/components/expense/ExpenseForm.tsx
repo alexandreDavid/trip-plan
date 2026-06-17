@@ -17,6 +17,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
 import { DateField } from '@/components/ui/DateField';
 import { amountsSplitDiff } from '@/utils/expenses';
+import { toDate } from '@/utils/dates';
 import { expenseCategoryMeta, EXPENSE_CATEGORIES } from './expenseMeta';
 
 export interface ExpensePrefill {
@@ -95,7 +96,7 @@ export function ExpenseForm({
     initialExpense?.eventId ?? prefill?.eventId,
   );
   const [date, setDate] = useState<Date>(
-    initialExpense ? initialExpense.date.toDate() : prefill?.date ?? new Date(),
+    initialExpense ? toDate(initialExpense.date) : prefill?.date ?? new Date(),
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 

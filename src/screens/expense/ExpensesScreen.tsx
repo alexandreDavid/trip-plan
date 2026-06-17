@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useMemo } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -90,24 +90,22 @@ export function ExpensesScreen({ route, navigation }: Props) {
                 />
               </View>
             ) : (
-              <FlatList
-                data={expenses}
-                scrollEnabled={false}
-                keyExtractor={(e) => e.id}
-                renderItem={({ item }) => (
-                  <ExpenseCard
-                    expense={item}
-                    participantsById={participantsById}
-                    baseCurrency={baseCurrency}
-                    eventName={item.eventId ? eventNameById[item.eventId] : undefined}
-                    onPress={
-                      canEdit
-                        ? () => navigation.navigate('AddEditExpense', { tripId, expenseId: item.id })
-                        : undefined
-                    }
-                  />
-                )}
-              />
+              // .map() plutôt qu'une FlatList imbriquée : sinon le scroll
+              // imbriqué bloque les gestes sur web mobile (cf. TripDetail).
+              expenses.map((item) => (
+                <ExpenseCard
+                  key={item.id}
+                  expense={item}
+                  participantsById={participantsById}
+                  baseCurrency={baseCurrency}
+                  eventName={item.eventId ? eventNameById[item.eventId] : undefined}
+                  onPress={
+                    canEdit
+                      ? () => navigation.navigate('AddEditExpense', { tripId, expenseId: item.id })
+                      : undefined
+                  }
+                />
+              ))
             )}
           </View>
         </ScrollView>

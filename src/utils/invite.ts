@@ -1,7 +1,13 @@
-// Lien / code d'invitation à un voyage. Le lien profond ouvre l'app ; le code
-// (tripId.token) est la solution de secours à coller manuellement.
+// Lien / code d'invitation à un voyage. Le lien est une URL https du web app,
+// ouvrable dans n'importe quel navigateur (et non un schéma natif tripplan://
+// qui n'ouvre que l'app installée). Le code (tripId.token) reste la solution de
+// secours à coller manuellement dans l'écran "Rejoindre".
 
-const SCHEME = 'tripplan';
+// URL publique du web app (Firebase Hosting). Surchargeable via
+// EXPO_PUBLIC_WEB_URL (ex. domaine personnalisé). Sans slash final.
+export const WEB_URL = (
+  process.env.EXPO_PUBLIC_WEB_URL ?? 'https://trip-plan-4a18a.web.app'
+).replace(/\/+$/, '');
 
 export function generateInviteToken(): string {
   return (
@@ -12,7 +18,7 @@ export function generateInviteToken(): string {
 }
 
 export function buildInviteLink(tripId: string, token: string): string {
-  return `${SCHEME}://join/${tripId}/${token}`;
+  return `${WEB_URL}/join/${tripId}/${token}`;
 }
 
 export function buildInviteCode(tripId: string, token: string): string {

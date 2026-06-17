@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { alertDialog } from '@/utils/dialog';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -91,14 +92,14 @@ export function MapScreen({ route, navigation }: Props) {
         }
         await delay(400);
       }
-      Alert.alert(
+      alertDialog(
         t('tripx.geocodeDoneTitle'),
         failed
           ? t('tripx.geocodeDoneWithFailures', { done, failed })
           : t('tripx.geocodeDone', { done }),
       );
     } catch (err) {
-      Alert.alert(t('common.error'), (err as Error).message);
+      alertDialog(t('common.error'), (err as Error).message);
     } finally {
       setGeocoding(false);
     }

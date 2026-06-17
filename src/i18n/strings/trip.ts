@@ -30,6 +30,7 @@ const trip = {
     'trip.budgetTotal': 'Budget total',
 
     // Partage
+    'trip.inviteCollaborators': 'Inviter des collaborateurs',
     'trip.inviteByEmail': 'Inviter par email',
     'trip.shareExplanation':
       'Les personnes invitees peuvent modifier le voyage (editeur) par defaut. Touchez le badge de role pour passer un membre en lecteur.',
@@ -95,6 +96,7 @@ const trip = {
     'trip.budgetTotal': 'Total budget',
 
     // Sharing
+    'trip.inviteCollaborators': 'Invite collaborators',
     'trip.inviteByEmail': 'Invite by email',
     'trip.shareExplanation':
       'Invited people can edit the trip (editor) by default. Tap the role badge to switch a member to viewer.',
@@ -160,6 +162,7 @@ const trip = {
     'trip.budgetTotal': 'Orçamento total',
 
     // Compartilhamento
+    'trip.inviteCollaborators': 'Convidar colaboradores',
     'trip.inviteByEmail': 'Convidar por e-mail',
     'trip.shareExplanation':
       'As pessoas convidadas podem editar a viagem (editor) por padrão. Toque no selo de função para mudar um membro para visualizador.',

@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { Trip, TripEvent, EventType } from '@/types';
 import { getEventPrimaryTime } from '@/utils/events';
-import { formatTime } from '@/utils/dates';
+import { formatTime, toDate } from '@/utils/dates';
 
 // Affichage des notifications même app au premier plan.
 Notifications.setNotificationHandler({
@@ -77,7 +77,7 @@ export async function scheduleTripReminders(
   for (const event of events) {
     const primaryTs = getEventPrimaryTime(event);
     if (!primaryTs) continue;
-    const primary = primaryTs.toDate();
+    const primary = toDate(primaryTs);
     const triggerDate = new Date(primary.getTime() - LEAD_MINUTES[event.type] * 60_000);
     if (triggerDate.getTime() <= now.getTime()) continue; // déjà passé
 

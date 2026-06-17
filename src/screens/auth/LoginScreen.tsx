@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { alertDialog } from '@/utils/dialog';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@/types';
@@ -32,7 +33,7 @@ export function LoginScreen({ navigation }: Props) {
     try {
       await signIn(email.trim(), password);
     } catch (err) {
-      Alert.alert(t('auth.signInError'), (err as Error).message);
+      alertDialog(t('auth.signInError'), (err as Error).message);
     }
   };
 
@@ -43,9 +44,9 @@ export function LoginScreen({ navigation }: Props) {
     }
     try {
       await resetPassword(email.trim());
-      Alert.alert(t('auth.resetSentTitle'), t('auth.resetSentMessage'));
+      alertDialog(t('auth.resetSentTitle'), t('auth.resetSentMessage'));
     } catch (err) {
-      Alert.alert(t('auth.signInError'), (err as Error).message);
+      alertDialog(t('auth.signInError'), (err as Error).message);
     }
   };
 
@@ -53,7 +54,7 @@ export function LoginScreen({ navigation }: Props) {
     try {
       await signInWithGoogle();
     } catch (err) {
-      Alert.alert(t('auth.googleError'), (err as Error).message);
+      alertDialog(t('auth.googleError'), (err as Error).message);
     }
   };
 
@@ -64,7 +65,7 @@ export function LoginScreen({ navigation }: Props) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          <Text style={styles.title}>Trip Plan</Text>
+          <Text style={styles.title}>Cardume</Text>
           <Text style={styles.subtitle}>{t('auth.signIn')}</Text>
 
           <Input

@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +20,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
 import { formatDateRange, dayKey } from '@/utils/dates';
 import { sortEventsChronologically } from '@/utils/events';
+import { confirmDialog } from '@/utils/dialog';
 import { EventTypePicker } from '@/components/event/EventTypePicker';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TripDetail'>;
@@ -61,18 +62,17 @@ export function TripDetailScreen({ route, navigation }: Props) {
     });
   }, [navigation, trip, isOwner, tripId, t, colors, styles]);
 
-  const handleDelete = () => {
-    Alert.alert(t('trip.deleteTripTitle'), t('trip.deleteTripMsg'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: async () => {
-          await deleteTrip(tripId);
-          navigation.goBack();
-        },
-      },
-    ]);
+  const handleDelete = async () => {
+    const ok = await confirmDialog({
+      title: t('trip.deleteTripTitle'),
+      message: t('trip.deleteTripMsg'),
+      confirmLabel: t('common.delete'),
+      cancelLabel: t('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
+    await deleteTrip(tripId);
+    navigation.goBack();
   };
 
   if (loading || !trip) return <LoadingScreen />;
@@ -111,7 +111,7 @@ export function TripDetailScreen({ route, navigation }: Props) {
         </View>
 
         <View style={styles.eventsList}>
-          {events.length === 0 ? (
+          {sortedEvents.length === 0 ? (
             <View style={{ paddingVertical: spacing.xl }}>
               <EmptyState
                 icon="calendar-outline"
@@ -120,24 +120,22 @@ export function TripDetailScreen({ route, navigation }: Props) {
               />
             </View>
           ) : (
-            <FlatList
-              data={sortedEvents}
-              scrollEnabled={false}
-              keyExtractor={(e) => e.id}
-              renderItem={({ item }) => (
-                <EventCard
-                  event={item}
-                  currency={trip.baseCurrency ?? DEFAULT_CURRENCY}
-                  onPress={() =>
-                    navigation.navigate('EventDetail', {
-                      tripId,
-                      dayId: item.dayId,
-                      eventId: item.id,
-                    })
-                  }
-                />
-              )}
-            />
+            // Rendu en .map() (pas de FlatList) : la liste vit dans le ScrollView
+            // parent, sinon le scroll imbriqué casse les gestes sur web mobile.
+            sortedEvents.map((item) => (
+              <EventCard
+                key={item.id}
+                event={item}
+                currency={trip.baseCurrency ?? DEFAULT_CURRENCY}
+                onPress={() =>
+                  navigation.navigate('EventDetail', {
+                    tripId,
+                    dayId: item.dayId,
+                    eventId: item.id,
+                  })
+                }
+              />
+            ))
           )}
         </View>
       </ScrollView>

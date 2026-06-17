@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,8 @@ import { useTrip } from '@/hooks/useTrip';
 import { useTripExpenses } from '@/hooks/useExpenses';
 import { useAllEvents } from '@/hooks/useEvents';
 import { getEventPrimaryTime } from '@/utils/events';
+import { toDate } from '@/utils/dates';
+import { confirmDialog, alertDialog } from '@/utils/dialog';
 import { ExpenseForm, ExpensePrefill } from '@/components/expense/ExpenseForm';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -50,23 +52,21 @@ export function AddEditExpenseScreen({ route, navigation }: Props) {
         label: sourceEvent.name,
         amount: sourceEvent.budget,
         category: EVENT_TYPE_TO_CATEGORY[sourceEvent.type],
-        date: getEventPrimaryTime(sourceEvent)?.toDate(),
+        date: toDate(getEventPrimaryTime(sourceEvent)),
       }
     : undefined;
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!expenseId) return;
-    Alert.alert(t('expense.deleteConfirmTitle'), '', [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: async () => {
-          await deleteExpense(tripId, expenseId);
-          navigation.goBack();
-        },
-      },
-    ]);
+    const ok = await confirmDialog({
+      title: t('expense.deleteConfirmTitle'),
+      confirmLabel: t('common.delete'),
+      cancelLabel: t('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
+    await deleteExpense(tripId, expenseId);
+    navigation.goBack();
   };
 
   useLayoutEffect(() => {
@@ -111,7 +111,7 @@ export function AddEditExpenseScreen({ route, navigation }: Props) {
       }
       navigation.goBack();
     } catch (err) {
-      Alert.alert(t('common.error'), (err as Error).message);
+      alertDialog(t('common.error'), (err as Error).message);
     } finally {
       setSubmitting(false);
     }

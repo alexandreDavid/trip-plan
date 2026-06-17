@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { alertDialog } from '@/utils/dialog';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -58,7 +59,7 @@ export function RemindersScreen({ route }: Props) {
     try {
       const granted = await requestNotificationPermission();
       if (!granted) {
-        Alert.alert(
+        alertDialog(
           t('tripx.permissionDeniedTitle'),
           t('tripx.permissionDeniedMessage'),
         );
@@ -66,9 +67,9 @@ export function RemindersScreen({ route }: Props) {
       }
       const n = await scheduleTripReminders(trip, events);
       await refresh();
-      Alert.alert(t('tripx.remindersScheduledTitle'), t('tripx.remindersScheduledMessage', { count: n }));
+      alertDialog(t('tripx.remindersScheduledTitle'), t('tripx.remindersScheduledMessage', { count: n }));
     } catch (e) {
-      Alert.alert(
+      alertDialog(
         t('tripx.unavailableTitle'),
         t('tripx.remindersUnavailableMessage', { message: (e as Error).message }),
       );
@@ -83,7 +84,7 @@ export function RemindersScreen({ route }: Props) {
       await cancelTripReminders(tripId);
       await refresh();
     } catch (e) {
-      Alert.alert(t('common.error'), (e as Error).message);
+      alertDialog(t('common.error'), (e as Error).message);
     } finally {
       setBusy(false);
     }

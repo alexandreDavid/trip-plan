@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
+import { alertDialog } from '@/utils/dialog';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, EventType, TripEvent, EventInput } from '@/types';
@@ -16,6 +17,7 @@ import { DEFAULT_CURRENCY } from '@/config/constants';
 import { spacing, Palette } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
+import { toDate } from '@/utils/dates';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddEditEvent'>;
 
@@ -38,7 +40,7 @@ export function AddEditEventScreen({ route, navigation }: Props) {
     (async () => {
       const days = await getDaysOnce(tripId);
       const day = days.find((d) => d.id === dayId);
-      setDayDate(day?.date.toDate());
+      setDayDate(toDate(day?.date));
     })();
   }, [tripId, dayId]);
 
@@ -66,7 +68,7 @@ export function AddEditEventScreen({ route, navigation }: Props) {
       }
       navigation.goBack();
     } catch (err) {
-      Alert.alert(t('common.error'), (err as Error).message);
+      alertDialog(t('common.error'), (err as Error).message);
     } finally {
       setSubmitting(false);
     }
