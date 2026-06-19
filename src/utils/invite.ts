@@ -1,5 +1,5 @@
 // Lien / code d'invitation à un voyage. Le lien est une URL https du web app,
-// ouvrable dans n'importe quel navigateur (et non un schéma natif tripplan://
+// ouvrable dans n'importe quel navigateur (et non un schéma natif cardume://
 // qui n'ouvre que l'app installée). Le code (tripId.token) reste la solution de
 // secours à coller manuellement dans l'écran "Rejoindre".
 
@@ -25,7 +25,7 @@ export function buildInviteCode(tripId: string, token: string): string {
   return `${tripId}.${token}`;
 }
 
-// Accepte un lien profond (tripplan://join/<tripId>/<token>) ou un code
+// Accepte un lien profond (cardume://join/<tripId>/<token>) ou un code
 // (<tripId>.<token>). Retourne null si non reconnu.
 export function parseInvite(input: string): { tripId: string; token: string } | null {
   const s = input.trim();

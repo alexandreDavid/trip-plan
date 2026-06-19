@@ -1,12 +1,12 @@
 {
   "expo": {
     "name": "Cardume",
-    "slug": "trip-plan",
+    "slug": "cardume",
     "version": "1.0.0",
     "description": "Planifiez vos voyages à plusieurs et partagez les dépenses, ensemble.",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "scheme": "tripplan",
+    "scheme": "cardume",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -15,19 +15,20 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.tripplan.app"
+      "bundleIdentifier": "com.cardume.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.tripplan.app",
+      "package": "com.cardume.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FF5A5F"
       },
-      "config": {
-        "googleMaps": {
-          "apiKey": "REMPLACER_PAR_CLE_MAPS_ANDROID"
-        }
-      }
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -43,6 +44,12 @@
       "expo-notifications",
       "expo-localization",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5d819301-af86-43b4-bd1d-180eccfc84ab"
+      }
+    },
+    "owner": "alexandredavids-organization"
   }
 }

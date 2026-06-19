@@ -14,9 +14,9 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { WEB_URL } from '@/utils/invite';
 
 // Liens d'invitation : https://<web>/join/<tripId>/<token> (ouvrable dans un
-// navigateur) ou tripplan://join/... (schéma natif). Les deux -> écran Rejoindre.
+// navigateur) ou cardume://join/... (schéma natif). Les deux -> écran Rejoindre.
 const linking = {
-  prefixes: ['tripplan://', WEB_URL, 'https://trip-plan-4a18a.firebaseapp.com'],
+  prefixes: ['cardume://', WEB_URL, 'https://trip-plan-4a18a.firebaseapp.com'],
   config: {
     screens: {
       JoinTrip: 'join/:tripId/:token',
