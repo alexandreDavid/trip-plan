@@ -1,4 +1,4 @@
-import { Expense } from '@/types';
+import { Expense, ExpenseCategory } from '@/types';
 
 // Tous les calculs se font en CENTIMES (entiers) dans la devise de base du
 // voyage, pour éviter les dérives d'arrondi des flottants. On ne reconvertit en
@@ -42,9 +42,76 @@ export function computeExpenseShares(expense: Expense): Record<string, number> {
   return result;
 }
 
+// Normalise le champ payeurs en map participantId -> montant payé (devise de la
+// dépense). Tolère l'ancien format `paidBy: string` (un seul payeur, montant total).
+export function expensePayers(expense: Expense): Record<string, number> {
+  const pb = expense.paidBy as unknown;
+  if (typeof pb === 'string') return { [pb]: expense.amount };
+  return (pb as Record<string, number>) ?? {};
+}
+
+// Montant réellement payé (au prestataire) = somme des paiements des payeurs, dans
+// la devise de la dépense. ≤ `amount` : 0 = non payée, = amount = payée.
+export function expensePaidAmount(expense: Expense): number {
+  return Object.values(expensePayers(expense)).reduce((a, b) => a + b, 0);
+}
+
+// Montant payé converti en centimes de base.
+function paidBaseCents(expense: Expense): number {
+  return toCents(expensePaidAmount(expense) * expense.rate);
+}
+
+// Crédit de chaque payeur en centimes de base. Le dernier payeur absorbe l'arrondi
+// pour que la somme égale exactement le montant payé.
+function payerCreditsCents(expense: Expense): Record<string, number> {
+  const payers = expensePayers(expense);
+  const ids = Object.keys(payers);
+  if (ids.length === 0) return {};
+  const targetCents = paidBaseCents(expense);
+  const out: Record<string, number> = {};
+  let allocated = 0;
+  ids.forEach((id, i) => {
+    if (i === ids.length - 1) {
+      out[id] = targetCents - allocated;
+    } else {
+      const cents = toCents(payers[id] * expense.rate);
+      out[id] = cents;
+      allocated += cents;
+    }
+  });
+  return out;
+}
+
+// Ramène une répartition (centimes) à un total cible, en conservant les
+// proportions. Le dernier absorbe l'arrondi → la somme égale exactement la cible.
+// Sert à n'imputer aux participants QUE ce qui a été payé (cas partiel) tout en
+// respectant les parts choisies (égales ou non).
+function scaleCentsTo(shares: Record<string, number>, targetCents: number): Record<string, number> {
+  const ids = Object.keys(shares);
+  const fullSum = ids.reduce((s, id) => s + shares[id], 0);
+  const out: Record<string, number> = {};
+  if (fullSum <= 0 || targetCents <= 0) {
+    for (const id of ids) out[id] = 0;
+    return out;
+  }
+  let allocated = 0;
+  ids.forEach((id, i) => {
+    if (i === ids.length - 1) {
+      out[id] = targetCents - allocated;
+    } else {
+      const cents = Math.floor((shares[id] * targetCents) / fullSum);
+      out[id] = cents;
+      allocated += cents;
+    }
+  });
+  return out;
+}
+
 // Solde net par participant (centimes de base) :
-//   positif  = on lui doit de l'argent (il a avancé plus que sa part)
+//   positif  = on lui doit de l'argent (il a payé plus que sa part)
 //   négatif  = il doit de l'argent
+// Seul ce qui a été réellement payé est réparti (cas partiel), selon les parts
+// choisies — l'invariant « somme des soldes = 0 » est préservé.
 export function computeBalances(
   expenses: Expense[],
   participantIds: string[],
@@ -53,10 +120,13 @@ export function computeBalances(
   for (const id of participantIds) balances[id] = 0;
 
   for (const e of expenses) {
-    const paidCents = toCents(e.amountInBase);
-    balances[e.paidBy] = (balances[e.paidBy] ?? 0) + paidCents;
-    const shares = computeExpenseShares(e);
-    for (const [id, cents] of Object.entries(shares)) {
+    const paidCents = paidBaseCents(e);
+    const credits = payerCreditsCents(e);
+    for (const [id, cents] of Object.entries(credits)) {
+      balances[id] = (balances[id] ?? 0) + cents;
+    }
+    const debits = scaleCentsTo(computeExpenseShares(e), paidCents);
+    for (const [id, cents] of Object.entries(debits)) {
       balances[id] = (balances[id] ?? 0) - cents;
     }
   }
@@ -100,6 +170,35 @@ export function computeSettlements(balances: Record<string, number>): Settlement
 
 export function sumExpensesInBase(expenses: Expense[]): number {
   return expenses.reduce((sum, e) => sum + e.amountInBase, 0);
+}
+
+export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
+
+// Statut de paiement au prestataire, déduit du montant payé vs le total (même
+// devise). Comparaison en centimes pour éviter les dérives de flottants.
+export function paymentStatus(amount: number, paidAmount: number | undefined): PaymentStatus {
+  const paid = toCents(paidAmount ?? 0);
+  const total = toCents(amount);
+  if (paid <= 0) return 'unpaid';
+  if (paid >= total) return 'paid';
+  return 'partial';
+}
+
+// Total dépensé par catégorie (devise de base). Sert au récap « Dépenses du
+// voyage » sur l'écran du voyage.
+export function groupExpensesByCategory(expenses: Expense[]): Record<ExpenseCategory, number> {
+  const result: Record<ExpenseCategory, number> = {
+    [ExpenseCategory.ACCOMMODATION]: 0,
+    [ExpenseCategory.TRANSPORT]: 0,
+    [ExpenseCategory.FOOD]: 0,
+    [ExpenseCategory.ACTIVITY]: 0,
+    [ExpenseCategory.SHOPPING]: 0,
+    [ExpenseCategory.OTHER]: 0,
+  };
+  for (const e of expenses) {
+    result[e.category] = (result[e.category] ?? 0) + e.amountInBase;
+  }
+  return result;
 }
 
 // Mode 'amounts' : écart (devise de base, arrondi au centime) entre le total à

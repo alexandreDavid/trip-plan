@@ -26,8 +26,8 @@ const trip = {
     // Jours
     'trip.day': 'Jour {index}',
 
-    // Budget
-    'trip.budgetTotal': 'Budget total',
+    // Dépenses
+    'trip.spendingTitle': 'Dépenses du voyage',
 
     // Partage
     'trip.inviteCollaborators': 'Inviter des collaborateurs',
@@ -92,8 +92,8 @@ const trip = {
     // Days
     'trip.day': 'Day {index}',
 
-    // Budget
-    'trip.budgetTotal': 'Total budget',
+    // Spending
+    'trip.spendingTitle': 'Trip spending',
 
     // Sharing
     'trip.inviteCollaborators': 'Invite collaborators',
@@ -158,8 +158,8 @@ const trip = {
     // Dias
     'trip.day': 'Dia {index}',
 
-    // Orçamento
-    'trip.budgetTotal': 'Orçamento total',
+    // Despesas
+    'trip.spendingTitle': 'Despesas da viagem',
 
     // Compartilhamento
     'trip.inviteCollaborators': 'Convidar colaboradores',

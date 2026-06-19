@@ -6,7 +6,8 @@ import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MainTabParamList, RootStackParamList } from '@/types';
-import { useMyTrips } from '@/hooks/useTrips';
+import { useAllTrips } from '@/hooks/useTrips';
+import { useAuth } from '@/contexts/AuthContext';
 import { TripCard } from '@/components/trip/TripCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
@@ -23,7 +24,8 @@ export function MyTripsScreen({ navigation }: Props) {
   const { colors } = useTheme();
   const t = useT();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { trips, loading } = useMyTrips();
+  const { user } = useAuth();
+  const { trips, loading } = useAllTrips();
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -59,6 +61,7 @@ export function MyTripsScreen({ navigation }: Props) {
           renderItem={({ item }) => (
             <TripCard
               trip={item}
+              sharedBadge={item.ownerId !== user?.uid}
               onPress={() => navigation.navigate('TripDetail', { tripId: item.id })}
             />
           )}

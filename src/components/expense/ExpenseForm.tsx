@@ -12,13 +12,15 @@ import {
 import { CURRENCIES } from '@/config/constants';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { SelectField } from '@/components/ui/SelectField';
 import { Palette, radius, spacing, fontSize } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
 import { DateField } from '@/components/ui/DateField';
-import { amountsSplitDiff } from '@/utils/expenses';
+import { amountsSplitDiff, expensePayers } from '@/utils/expenses';
 import { toDate } from '@/utils/dates';
 import { expenseCategoryMeta, EXPENSE_CATEGORIES } from './expenseMeta';
+import { PaymentBadge } from './PaymentBadge';
 
 export interface ExpensePrefill {
   eventId?: string;
@@ -39,7 +41,7 @@ interface Props {
   onSubmit: (input: ExpenseInput) => void;
 }
 
-const parseNum = (s: string): number => parseFloat(s.replace(',', '.'));
+const parseNum = (s: string | undefined): number => parseFloat((s ?? '').replace(',', '.'));
 
 const SPLIT_MODES: { mode: SplitMode; labelKey: string }[] = [
   { mode: 'equal', labelKey: 'expense.splitEqual' },
@@ -61,11 +63,10 @@ export function ExpenseForm({
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const t = useT();
 
-  const defaultPayer =
-    initialExpense?.paidBy ??
-    participants.find((p) => p.uid === currentUid)?.id ??
-    participants[0]?.id ??
-    '';
+  // Payeurs initiaux (édition) ; tolère l'ancien format mono-payeur.
+  const initialPayers = initialExpense ? expensePayers(initialExpense) : null;
+  const defaultPayerId =
+    participants.find((p) => p.uid === currentUid)?.id ?? participants[0]?.id ?? '';
 
   const [label, setLabel] = useState(initialExpense?.label ?? prefill?.label ?? '');
   const [amount, setAmount] = useState(
@@ -80,7 +81,17 @@ export function ExpenseForm({
   const [category, setCategory] = useState<ExpenseCategory>(
     initialExpense?.category ?? prefill?.category ?? ExpenseCategory.FOOD,
   );
-  const [paidBy, setPaidBy] = useState(defaultPayer);
+  // Qui a payé et combien. Chacun saisit ce qu'il a réellement payé ; la somme
+  // peut être < total (partielle) ou nulle (non payée). Un seul payeur sans
+  // montant saisi = a tout payé (cas courant).
+  const [payerIds, setPayerIds] = useState<string[]>(
+    initialPayers ? Object.keys(initialPayers) : defaultPayerId ? [defaultPayerId] : [],
+  );
+  const [payerInputs, setPayerInputs] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    if (initialPayers) for (const [id, v] of Object.entries(initialPayers)) init[id] = String(v);
+    return init;
+  });
   const [splitMode, setSplitMode] = useState<SplitMode>(initialExpense?.splitMode ?? 'equal');
   const [splitBetween, setSplitBetween] = useState<string[]>(
     initialExpense?.splitBetween ?? participants.map((p) => p.id),
@@ -124,11 +135,37 @@ export function ExpenseForm({
     return amountInBase / splitBetween.length;
   }, [splitMode, amountInBase, splitBetween.length]);
 
+  // Un seul payeur sans montant saisi : il a tout payé (raccourci du cas courant).
+  const singlePayerImplicitFull =
+    payerIds.length === 1 && !(payerInputs[payerIds[0]]?.trim());
+
+  // Montant réellement payé (devise de la dépense), d'après les saisies par payeur.
+  const paidSum = useMemo(() => {
+    if (payerIds.length === 0) return 0;
+    if (singlePayerImplicitFull) return parseNum(amount) || 0;
+    return payerIds.reduce((s, id) => s + (parseNum(payerInputs[id]) || 0), 0);
+  }, [payerIds, payerInputs, amount, singlePayerImplicitFull]);
+
   const toggleSplit = (id: string) =>
     setSplitBetween((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   const setShare = (id: string, value: string) =>
     setShareInputs((prev) => ({ ...prev, [id]: value }));
+
+  const togglePayer = (id: string) =>
+    setPayerIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  const setPayerInput = (id: string, value: string) =>
+    setPayerInputs((prev) => ({ ...prev, [id]: value }));
+
+  // Map payeur -> montant payé. Un seul payeur sans saisie couvre tout le total.
+  const buildPayers = (amountNum: number): Record<string, number> => {
+    if (payerIds.length === 0) return {};
+    if (singlePayerImplicitFull) return { [payerIds[0]]: amountNum };
+    const out: Record<string, number> = {};
+    for (const id of payerIds) out[id] = parseNum(payerInputs[id]) || 0;
+    return out;
+  };
 
   const buildShares = (): Record<string, number> | undefined => {
     if (splitMode === 'equal') return undefined;
@@ -150,7 +187,12 @@ export function ExpenseForm({
     if (!label.trim()) errs.label = t('expense.errLabelRequired');
     if (!amountNum || amountNum <= 0) errs.amount = t('expense.errAmountInvalid');
     if (isForeign && (!rateNum || rateNum <= 0)) errs.rate = t('expense.errRateInvalid');
-    if (!paidBy) errs.paidBy = t('expense.errChoosePayer');
+    // Les paiements ne peuvent pas dépasser le coût total (somme < total = partielle).
+    const payers = buildPayers(amountNum);
+    const paidTotal = Object.values(payers).reduce((a, b) => a + b, 0);
+    if (amountNum > 0 && paidTotal > amountNum + 0.005) {
+      errs.paidBy = t('expense.errPaymentsExceedTotal');
+    }
     if (splitBetween.length === 0) errs.split = t('expense.errAtLeastOneParticipant');
     if (splitMode === 'shares' && shares && Object.values(shares).reduce((a, b) => a + b, 0) <= 0) {
       errs.split = t('expense.errAtLeastOneShare');
@@ -168,7 +210,7 @@ export function ExpenseForm({
       currency,
       rate: rateNum,
       amountInBase: amountNum * rateNum,
-      paidBy,
+      paidBy: payers,
       splitMode,
       splitBetween,
       shares,
@@ -238,11 +280,44 @@ export function ExpenseForm({
 
       <Text style={styles.fieldLabel}>{t('expense.paidByField')}</Text>
       {errors.paidBy && <Text style={styles.errorText}>{errors.paidBy}</Text>}
-      <View style={styles.wrapRow}>
-        {participants.map((p) => (
-          <Chip key={p.id} label={p.displayName} active={p.id === paidBy} onPress={() => setPaidBy(p.id)} />
-        ))}
+      <View>
+        {participants.map((p) => {
+          const isPayer = payerIds.includes(p.id);
+          return (
+            <View key={p.id} style={styles.shareRow}>
+              <Pressable onPress={() => togglePayer(p.id)} style={styles.shareCheck} hitSlop={6}>
+                <Ionicons
+                  name={isPayer ? 'checkbox' : 'square-outline'}
+                  size={22}
+                  color={isPayer ? colors.primary : colors.textMuted}
+                />
+              </Pressable>
+              <Text style={styles.shareName} numberOfLines={1}>
+                {p.displayName}
+              </Text>
+              {isPayer && (
+                <TextInput
+                  value={payerInputs[p.id] ?? ''}
+                  onChangeText={(v) => setPayerInput(p.id, v)}
+                  keyboardType="decimal-pad"
+                  placeholder={
+                    payerIds.length === 1 && parseNum(amount) > 0
+                      ? parseNum(amount).toFixed(2)
+                      : currency
+                  }
+                  placeholderTextColor={colors.textMuted}
+                  style={styles.shareInput}
+                />
+              )}
+            </View>
+          );
+        })}
       </View>
+      {parseNum(amount) > 0 && (
+        <View style={styles.paymentStatusRow}>
+          <PaymentBadge amount={parseNum(amount)} paidAmount={paidSum} currency={currency} />
+        </View>
+      )}
 
       <Text style={styles.fieldLabel}>{t('expense.split')}</Text>
       <View style={styles.segment}>
@@ -317,20 +392,14 @@ export function ExpenseForm({
       )}
 
       {events.length > 0 && (
-        <>
-          <Text style={styles.fieldLabel}>{t('expense.linkEvent')}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-            <Chip label={t('expense.none')} active={!eventId} onPress={() => setEventId(undefined)} />
-            {events.map((ev) => (
-              <Chip
-                key={ev.id}
-                label={ev.name}
-                active={eventId === ev.id}
-                onPress={() => setEventId(ev.id)}
-              />
-            ))}
-          </ScrollView>
-        </>
+        <SelectField
+          label={t('expense.linkEvent')}
+          value={eventId}
+          options={events.map((ev) => ({ value: ev.id, label: ev.name }))}
+          noneLabel={t('expense.none')}
+          placeholder={t('expense.none')}
+          onChange={setEventId}
+        />
       )}
 
       <DateField
@@ -408,6 +477,7 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     textAlign: 'right',
     backgroundColor: colors.surface,
   },
+  paymentStatusRow: { flexDirection: 'row', marginBottom: spacing.md },
   preview: { fontSize: fontSize.sm, color: colors.textMuted, marginBottom: spacing.md, fontStyle: 'italic' },
   previewOk: { color: colors.success },
   previewWarn: { color: colors.warning, fontStyle: 'normal', fontWeight: '600' },

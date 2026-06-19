@@ -3,7 +3,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from '@/types';
 import { MyTripsScreen } from '@/screens/home/MyTripsScreen';
-import { SharedTripsScreen } from '@/screens/home/SharedTripsScreen';
 import { ProfileScreen } from '@/screens/profile/ProfileScreen';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
@@ -29,14 +28,6 @@ export function MainTabs() {
         options={{
           title: t('nav.myTrips'),
           tabBarIcon: ({ color, size }) => <Ionicons name="airplane" size={size} color={color} />,
-        }}
-      />
-      <Tab.Screen
-        name="SharedTrips"
-        component={SharedTripsScreen}
-        options={{
-          title: t('nav.sharedTrips'),
-          tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />,
         }}
       />
       <Tab.Screen

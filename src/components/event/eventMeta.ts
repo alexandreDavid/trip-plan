@@ -13,8 +13,8 @@ export const eventMeta: Record<EventType, { icon: IconName; color: string; label
 };
 
 // Icône spécifique au mode de transport. La catégorie "transport" garde l'avion
-// générique dans eventMeta (sélecteur de type, budget) ; ici on précise selon
-// le mode réellement choisi sur l'événement.
+// générique dans eventMeta (sélecteur de type) ; ici on précise selon le mode
+// réellement choisi sur l'événement.
 export const transportIcons: Record<TransportMode, IconName> = {
   flight: 'airplane-outline',
   train: 'train-outline',

@@ -8,7 +8,6 @@ import { useTrip } from '@/hooks/useTrip';
 import { useAllEvents } from '@/hooks/useEvents';
 import { EventCard } from '@/components/event/EventCard';
 import { EventTypePicker } from '@/components/event/EventTypePicker';
-import { DEFAULT_CURRENCY } from '@/config/constants';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatDate } from '@/utils/dates';
@@ -83,7 +82,6 @@ export function TimelineScreen({ route, navigation }: Props) {
                   <EventCard
                     key={event.id}
                     event={event}
-                    currency={trip.baseCurrency ?? DEFAULT_CURRENCY}
                     onPress={() =>
                       navigation.navigate('EventDetail', {
                         tripId,

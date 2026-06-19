@@ -34,7 +34,13 @@ const expense = {
     'expense.errAmountsMustEqualTotal': 'La somme des montants doit égaler le total',
 
     // ExpenseCard
-    'expense.paidBySplit': '{payer} a payé · {count} pers.',
+    'expense.paidBySplit': 'Payé par {payer} · {count} pers.',
+
+    // Paiement : chaque payeur saisit ce qu'il a payé ; statut déduit (somme vs total)
+    'expense.errPaymentsExceedTotal': 'Les paiements dépassent le total',
+    'expense.paid': 'Payée',
+    'expense.partiallyPaid': 'Partielle',
+    'expense.unpaid': 'Non payée',
 
     // BalancePanel
     'expense.totalSpent': 'Total dépensé',
@@ -112,7 +118,13 @@ const expense = {
     'expense.errAmountsMustEqualTotal': 'The sum of amounts must equal the total',
 
     // ExpenseCard
-    'expense.paidBySplit': '{payer} paid · {count} ppl',
+    'expense.paidBySplit': 'Paid by {payer} · {count} ppl',
+
+    // Payment: each payer enters what they paid; status derived (sum vs total)
+    'expense.errPaymentsExceedTotal': 'Payments exceed the total',
+    'expense.paid': 'Paid',
+    'expense.partiallyPaid': 'Partial',
+    'expense.unpaid': 'Unpaid',
 
     // BalancePanel
     'expense.totalSpent': 'Total spent',
@@ -189,7 +201,13 @@ const expense = {
     'expense.errAmountsMustEqualTotal': 'A soma dos valores deve ser igual ao total',
 
     // ExpenseCard
-    'expense.paidBySplit': '{payer} pagou · {count} pessoas',
+    'expense.paidBySplit': 'Pago por {payer} · {count} pessoas',
+
+    // Pagamento: cada pagador informa o que pagou; status deduzido (soma vs total)
+    'expense.errPaymentsExceedTotal': 'Os pagamentos excedem o total',
+    'expense.paid': 'Paga',
+    'expense.partiallyPaid': 'Parcial',
+    'expense.unpaid': 'Não paga',
 
     // BalancePanel
     'expense.totalSpent': 'Total gasto',

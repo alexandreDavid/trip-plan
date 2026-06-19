@@ -7,13 +7,10 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
 import type { TranslateFn } from '@/i18n/I18nContext';
 import { formatTime } from '@/utils/dates';
-import { formatMoney } from '@/utils/expenses';
-import { DEFAULT_CURRENCY } from '@/config/constants';
 import { eventMeta, eventIcon } from './eventMeta';
 
 interface Props {
   event: TripEvent;
-  currency?: string;
   onPress?: () => void;
   onDelete?: () => void;
   editable?: boolean;
@@ -54,7 +51,7 @@ function getSubtitle(event: TripEvent): string | null {
   }
 }
 
-export function EventCard({ event, currency = DEFAULT_CURRENCY, onPress, onDelete, editable }: Props) {
+export function EventCard({ event, onPress, onDelete, editable }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const t = useT();
@@ -75,9 +72,6 @@ export function EventCard({ event, currency = DEFAULT_CURRENCY, onPress, onDelet
           <Text style={styles.name} numberOfLines={1}>
             {event.name}
           </Text>
-          {event.budget != null && (
-            <Text style={styles.budget}>{formatMoney(event.budget, currency)}</Text>
-          )}
         </View>
         {subtitle ? (
           <Text style={styles.subtitle} numberOfLines={1}>
@@ -116,7 +110,6 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   body: { flex: 1 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   name: { flex: 1, fontSize: fontSize.md, fontWeight: '600', color: colors.text },
-  budget: { fontSize: fontSize.sm, color: colors.primary, fontWeight: '600', marginLeft: spacing.sm },
   subtitle: { fontSize: fontSize.sm, color: colors.textMuted, marginTop: 2 },
   time: { fontSize: fontSize.xs, color: colors.text, marginTop: 2, fontWeight: '500' },
   deleteBtn: { padding: spacing.xs },

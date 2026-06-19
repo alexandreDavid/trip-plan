@@ -118,7 +118,7 @@ export async function reorderEvents(
   await batch.commit();
 }
 
-// Abonnement temps reel a tous les evenements d'un voyage (timeline + budget),
+// Abonnement temps reel a tous les evenements d'un voyage (timeline, depenses),
 // agrege jour par jour. On lit les sous-collections par jour (autorisees par les
 // regles existantes : tripId concret dans le chemin) plutot qu'une requete
 // collectionGroup, qui n'est pas simplement autorisable cote regles (la condition

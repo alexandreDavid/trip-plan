@@ -7,7 +7,6 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   MyTrips: undefined;
-  SharedTrips: undefined;
   Profile: undefined;
 };
 

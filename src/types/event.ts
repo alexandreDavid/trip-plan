@@ -15,7 +15,6 @@ interface BaseEvent {
   tripId: string;
   name: string;
   notes?: string;
-  budget?: number;
   latitude?: number;
   longitude?: number;
   order: number;

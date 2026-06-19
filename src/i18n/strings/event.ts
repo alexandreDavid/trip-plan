@@ -19,7 +19,6 @@ const event = {
     'event.start': 'Début',
     'event.end': 'Fin',
     'event.time': 'Heure',
-    'event.budgetLabel': 'Budget',
     'event.notes': 'Notes',
 
     // EventForm — modes de transport
@@ -53,7 +52,6 @@ const event = {
     'event.start': 'Start',
     'event.end': 'End',
     'event.time': 'Time',
-    'event.budgetLabel': 'Budget',
     'event.notes': 'Notes',
 
     // EventForm — transport modes
@@ -87,7 +85,6 @@ const event = {
     'event.start': 'Início',
     'event.end': 'Fim',
     'event.time': 'Horário',
-    'event.budgetLabel': 'Orçamento',
     'event.notes': 'Notas',
 
     // EventForm — modos de transporte

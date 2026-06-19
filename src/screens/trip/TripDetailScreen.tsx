@@ -6,11 +6,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '@/types';
 import { useTrip } from '@/hooks/useTrip';
 import { useEvents } from '@/hooks/useEvents';
-import { useTripBudget } from '@/hooks/useBudget';
+import { useTripExpenses } from '@/hooks/useExpenses';
 import { DaySelector } from '@/components/trip/DaySelector';
 import { TripActionBar } from '@/components/trip/TripActionBar';
 import { EventCard } from '@/components/event/EventCard';
-import { BudgetSummary } from '@/components/budget/BudgetSummary';
+import { SpendingSummary } from '@/components/expense/SpendingSummary';
+import { groupExpensesByCategory } from '@/utils/expenses';
 import { DEFAULT_CURRENCY } from '@/config/constants';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -34,7 +35,8 @@ export function TripDetailScreen({ route, navigation }: Props) {
   const [selectedDayId, setSelectedDayId] = useState<string | undefined>();
   const { events } = useEvents(tripId, selectedDayId);
   const sortedEvents = useMemo(() => sortEventsChronologically(events), [events]);
-  const budget = useTripBudget(tripId);
+  const { expenses, totalInBase } = useTripExpenses(tripId);
+  const spendingByCategory = useMemo(() => groupExpensesByCategory(expenses), [expenses]);
   const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
@@ -99,11 +101,13 @@ export function TripDetailScreen({ route, navigation }: Props) {
               { icon: 'people-outline', label: t('trip.actions.participants'), onPress: () => navigation.navigate('ShareTrip', { tripId }) },
             ]}
           />
-          <BudgetSummary
-            total={budget.total}
-            byType={budget.byType}
-            currency={trip.baseCurrency ?? DEFAULT_CURRENCY}
-          />
+          {expenses.length > 0 && (
+            <SpendingSummary
+              total={totalInBase}
+              byCategory={spendingByCategory}
+              currency={trip.baseCurrency ?? DEFAULT_CURRENCY}
+            />
+          )}
         </View>
 
         <View style={styles.daySelectorWrap}>
@@ -126,7 +130,6 @@ export function TripDetailScreen({ route, navigation }: Props) {
               <EventCard
                 key={item.id}
                 event={item}
-                currency={trip.baseCurrency ?? DEFAULT_CURRENCY}
                 onPress={() =>
                   navigation.navigate('EventDetail', {
                     tripId,

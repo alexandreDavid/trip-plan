@@ -1,36 +1,49 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { EventType } from '@/types';
+import { Ionicons } from '@expo/vector-icons';
+import { ExpenseCategory } from '@/types';
 import { spacing, radius, fontSize, Palette } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
 import { formatMoney } from '@/utils/expenses';
-import { eventMeta } from '@/components/event/eventMeta';
+import { expenseCategoryMeta } from './expenseMeta';
 
 interface Props {
   total: number;
-  byType: Record<EventType, number>;
+  byCategory: Record<ExpenseCategory, number>;
   currency: string;
 }
 
-export function BudgetSummary({ total, byType, currency }: Props) {
+// Récap des dépenses réelles du voyage : total + répartition par catégorie.
+// On n'affiche que les catégories non nulles, triées du plus gros au plus petit.
+export function SpendingSummary({ total, byCategory, currency }: Props) {
   const { colors } = useTheme();
   const t = useT();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+
+  const rows = useMemo(
+    () =>
+      (Object.entries(byCategory) as [ExpenseCategory, number][])
+        .filter(([, amount]) => amount > 0)
+        .sort((a, b) => b[1] - a[1]),
+    [byCategory],
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.totalRow}>
-        <Text style={styles.totalLabel}>{t('trip.budgetTotal')}</Text>
+        <Text style={styles.totalLabel}>{t('trip.spendingTitle')}</Text>
         <Text style={styles.totalValue}>{formatMoney(total, currency)}</Text>
       </View>
       <View style={styles.breakdown}>
-        {(Object.keys(byType) as EventType[]).map((type) => {
-          const meta = eventMeta[type];
+        {rows.map(([category, amount]) => {
+          const meta = expenseCategoryMeta[category];
           return (
-            <View key={type} style={styles.item}>
+            <View key={category} style={styles.item}>
               <View style={[styles.dot, { backgroundColor: meta.color }]} />
+              <Ionicons name={meta.icon} size={15} color={colors.textMuted} />
               <Text style={styles.itemLabel}>{t(meta.labelKey)}</Text>
-              <Text style={styles.itemValue}>{formatMoney(byType[type], currency)}</Text>
+              <Text style={styles.itemValue}>{formatMoney(amount, currency)}</Text>
             </View>
           );
         })}

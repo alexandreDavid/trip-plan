@@ -50,7 +50,6 @@ export function AddEditExpenseScreen({ route, navigation }: Props) {
     ? {
         eventId: sourceEvent.id,
         label: sourceEvent.name,
-        amount: sourceEvent.budget,
         category: EVENT_TYPE_TO_CATEGORY[sourceEvent.type],
         date: toDate(getEventPrimaryTime(sourceEvent)),
       }

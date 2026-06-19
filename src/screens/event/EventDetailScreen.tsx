@@ -3,19 +3,21 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { RootStackParamList, EventType, TripEvent } from '@/types';
+import { RootStackParamList, EventType, TripEvent, Participant } from '@/types';
 import { DEFAULT_CURRENCY } from '@/config/constants';
 import { useTrip } from '@/hooks/useTrip';
 import { useEvents } from '@/hooks/useEvents';
+import { useTripExpenses } from '@/hooks/useExpenses';
 import { deleteEvent } from '@/services/eventService';
 import { eventMeta, eventIcon } from '@/components/event/eventMeta';
+import { ExpenseCard } from '@/components/expense/ExpenseCard';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { Button } from '@/components/ui/Button';
 import { Palette, radius, spacing, fontSize } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT, TranslateFn } from '@/i18n/I18nContext';
 import { formatTime, formatDate } from '@/utils/dates';
-import { formatMoney } from '@/utils/expenses';
+import { formatMoney, sumExpensesInBase } from '@/utils/expenses';
 import { confirmDialog } from '@/utils/dialog';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EventDetail'>;
@@ -72,9 +74,15 @@ export function EventDetailScreen({ route, navigation }: Props) {
   const { tripId, dayId, eventId } = route.params;
   const { trip, canEdit } = useTrip(tripId);
   const { events, loading } = useEvents(tripId, dayId);
+  const { expenses, participants } = useTripExpenses(tripId);
+
+  const baseCurrency = trip?.baseCurrency ?? DEFAULT_CURRENCY;
+  const participantsById = useMemo(
+    () => Object.fromEntries(participants.map((p) => [p.id, p])) as Record<string, Participant>,
+    [participants],
+  );
 
   const event = events.find((e) => e.id === eventId);
-  const currency = trip?.baseCurrency ?? DEFAULT_CURRENCY;
 
   const handleDelete = async () => {
     const ok = await confirmDialog({
@@ -123,6 +131,8 @@ export function EventDetailScreen({ route, navigation }: Props) {
 
   const meta = eventMeta[event.type];
   const rows = buildRows(event, t);
+  const linkedExpenses = expenses.filter((e) => e.eventId === event.id);
+  const linkedTotal = sumExpensesInBase(linkedExpenses);
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
@@ -137,20 +147,16 @@ export function EventDetailScreen({ route, navigation }: Props) {
           </View>
         </View>
 
-        <View style={styles.card}>
-          {rows.map((row, i) => (
-            <View key={i} style={[styles.row, i > 0 && styles.rowBorder]}>
-              <Text style={styles.rowLabel}>{row.label}</Text>
-              <Text style={styles.rowValue}>{row.value}</Text>
-            </View>
-          ))}
-          {event.budget != null && (
-            <View style={[styles.row, rows.length > 0 && styles.rowBorder]}>
-              <Text style={styles.rowLabel}>{t('event.budgetLabel')}</Text>
-              <Text style={styles.rowValue}>{formatMoney(event.budget, currency)}</Text>
-            </View>
-          )}
-        </View>
+        {rows.length > 0 && (
+          <View style={styles.card}>
+            {rows.map((row, i) => (
+              <View key={i} style={[styles.row, i > 0 && styles.rowBorder]}>
+                <Text style={styles.rowLabel}>{row.label}</Text>
+                <Text style={styles.rowValue}>{row.value}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         {event.notes ? (
           <View style={styles.card}>
@@ -158,6 +164,28 @@ export function EventDetailScreen({ route, navigation }: Props) {
             <Text style={styles.notes}>{event.notes}</Text>
           </View>
         ) : null}
+
+        {linkedExpenses.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{t('expense.expensesSection')}</Text>
+              <Text style={styles.sectionTotal}>{formatMoney(linkedTotal, baseCurrency)}</Text>
+            </View>
+            {linkedExpenses.map((exp) => (
+              <ExpenseCard
+                key={exp.id}
+                expense={exp}
+                participantsById={participantsById}
+                baseCurrency={baseCurrency}
+                onPress={
+                  canEdit
+                    ? () => navigation.navigate('AddEditExpense', { tripId, expenseId: exp.id })
+                    : undefined
+                }
+              />
+            ))}
+          </>
+        )}
 
         {canEdit && (
           <Button
@@ -210,4 +238,12 @@ const makeStyles = (colors: Palette) =>
     },
     notes: { fontSize: fontSize.md, color: colors.text, marginBottom: spacing.md, lineHeight: 22 },
     muted: { fontSize: fontSize.md, color: colors.textMuted },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+      marginBottom: spacing.sm,
+    },
+    sectionTitle: { fontSize: fontSize.md, fontWeight: '700', color: colors.text },
+    sectionTotal: { fontSize: fontSize.md, fontWeight: '700', color: colors.primary },
   });

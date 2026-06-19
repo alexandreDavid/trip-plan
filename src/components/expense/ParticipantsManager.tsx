@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Palette, radius, spacing, fontSize } from '@/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n/I18nContext';
-import { formatCents } from '@/utils/expenses';
+import { formatCents, expensePayers } from '@/utils/expenses';
 import { avatarColor, initials } from '@/utils/avatar';
 import { confirmDialog, alertDialog } from '@/utils/dialog';
 
@@ -21,7 +21,7 @@ import { confirmDialog, alertDialog } from '@/utils/dialog';
 
 function isReferenced(participantId: string, expenses: Expense[]): boolean {
   return expenses.some(
-    (e) => e.paidBy === participantId || e.splitBetween.includes(participantId),
+    (e) => participantId in expensePayers(e) || e.splitBetween.includes(participantId),
   );
 }
 

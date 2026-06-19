@@ -37,8 +37,11 @@ export interface Expense {
   amount: number; // dans `currency`
   currency: string; // code ISO, ex 'EUR'
   rate: number; // 1 unité de `currency` = `rate` unités de la devise de base du voyage
-  amountInBase: number; // = amount * rate, pré-calculé pour les soldes
-  paidBy: string; // participantId qui a avancé
+  amountInBase: number; // = amount * rate (coût total en devise de base)
+  // Qui a payé et combien : participantId -> montant payé (devise `currency`). La
+  // somme = montant réellement payé (≤ `amount`) : < amount = partielle, {} = non
+  // payée. Le statut de paiement et les soldes en découlent.
+  paidBy: Record<string, number>;
   splitMode: SplitMode;
   splitBetween: string[]; // participantId concernés
   shares?: Record<string, number>; // pour 'shares' / 'amounts'
@@ -57,7 +60,7 @@ export type ExpenseInput = {
   currency: string;
   rate: number;
   amountInBase: number;
-  paidBy: string;
+  paidBy: Record<string, number>;
   splitMode: SplitMode;
   splitBetween: string[];
   shares?: Record<string, number>;

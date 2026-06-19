@@ -14,7 +14,6 @@ interface Props {
   type: EventType;
   initialEvent?: TripEvent;
   dayDate: Date; // date de la journee, pour construire les timestamps heure
-  currency: string; // devise du voyage (pour le libellé du budget)
   submitting?: boolean;
   onSubmit: (input: EventInput) => Promise<void> | void;
 }
@@ -43,16 +42,13 @@ const TRANSPORT_LABEL_KEYS: Record<TransportMode, string> = {
   other: 'event.transport.other',
 };
 
-export function EventForm({ type, initialEvent, dayDate, currency, submitting, onSubmit }: Props) {
+export function EventForm({ type, initialEvent, dayDate, submitting, onSubmit }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const t = useT();
   // Champs communs
   const [name, setName] = useState(initialEvent?.name ?? '');
   const [notes, setNotes] = useState(initialEvent?.notes ?? '');
-  const [budget, setBudget] = useState(
-    initialEvent?.budget != null ? String(initialEvent.budget) : '',
-  );
   const [nameError, setNameError] = useState<string | null>(null);
 
   // Hebergement
@@ -124,7 +120,6 @@ export function EventForm({ type, initialEvent, dayDate, currency, submitting, o
     const base = {
       name: name.trim(),
       notes: notes.trim() || undefined,
-      budget: budget ? parseFloat(budget.replace(',', '.')) : undefined,
     };
 
     let input: EventInput;
@@ -244,12 +239,6 @@ export function EventForm({ type, initialEvent, dayDate, currency, submitting, o
         </>
       )}
 
-      <Input
-        label={`${t('event.budgetLabel')} (${currency})`}
-        value={budget}
-        onChangeText={setBudget}
-        keyboardType="decimal-pad"
-      />
       <Input
         label={t('event.notes')}
         value={notes}
